@@ -1,0 +1,75 @@
+<!-- index.html (Frontend UI) -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QEMU KVM Management</title>
+</head>
+<body>
+    <h1>QEMU KVM Management</h1>
+    <label for="vm-name">VM Name:</label>
+    <input type="text" id="vm-name"><br><br>
+    <label for="new-ip">New IP Address:</label>
+    <input type="text" id="new-ip"><br><br>
+    <button onclick="updateIP()">Update IP</button><br><br>
+    <label for="disk-size">New Disk Size (GB):</label>
+    <input type="number" id="disk-size"><br><br>
+    <button onclick="resizeDisk()">Resize Disk</button><br><br>
+
+    <script>
+        function updateIP() {
+            var vmName = document.getElementById("vm-name").value;
+            var newIP = document.getElementById("new-ip").value;
+            fetch('/update-ip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ vmName: vmName, newIP: newIP })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log(data);
+                alert(data);
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+                alert('An error occurred while updating IP address');
+            });
+        }
+
+        function resizeDisk() {
+            var vmName = document.getElementById("vm-name").value;
+            var newSize = document.getElementById("disk-size").value;
+            fetch('/resize-disk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ vmName: vmName, newSize: newSize })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log(data);
+                alert(data);
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+                alert('An error occurred while resizing disk');
+            });
+        }
+    </script>
+</body>
+</html>
