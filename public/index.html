@@ -36,12 +36,12 @@
                 return response.text();
             })
             .then(data => {
-                console.log(data);
-                alert(data);
+                console.log(data);  // Log the response for debugging
+                alert('IP Address Updated');  // Alert success message
             })
             .catch(error => {
                 console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while updating IP address');
+                alert('An error occurred while updating IP address');  // Alert error message
             });
         }
 
