@@ -9,6 +9,11 @@
 </head>
 <body>
     <h1>QEMU KVM Management</h1>
+    <label for="os-name">Select OS:</label>
+    <select id="os-name">
+        <option value="ubuntu">Ubuntu</option>
+        <option value="centos">CentOS</option>
+    </select><br><br>
     <label for="vm-name">VM Name:</label>
     <input type="text" id="vm-name"><br><br>
     <label for="new-ip">New IP Address:</label>
@@ -21,18 +26,22 @@
     <script>
         function updateIP() {
             var vmName = document.getElementById("vm-name").value;
+            var osName = document.getElementById("os-name").value;
             var newIP = document.getElementById("new-ip").value;
             fetch('/update-ip', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ vmName: vmName, newIP: newIP })
+                body: JSON.stringify({ vmName: vmName, osName: osName, newIP: newIP })
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
+                // Clear input fields after successful submission
+                document.getElementById("vm-name").value = "";
+                document.getElementById("new-ip").value = "";
                 return response.text();
             })
             .then(data => {
