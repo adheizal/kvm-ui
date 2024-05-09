@@ -2,7 +2,7 @@
 
 if [ "${1}" == "ubuntu" ]; then
     # Fetch Ubuntu type
-    export TYPE=$(ssh 10.0.1.254 hostnamectl | grep ubuntu | awk '{print $3}')
+    export TYPE=$(ssh 10.0.1.254 "hostnamectl | grep ubuntu | awk '{print $3}'")
 
     # Update IP based on Ubuntu type
     if [ "$TYPE" = "ubuntu-lite" ] || [ "$TYPE" = "ubuntu-kvm" ]; then

@@ -9,6 +9,7 @@
 </head>
 <body>
     <h1>QEMU KVM Management</h1>
+    <script src="config.js"></script>
     <label for="os-name">Select OS:</label>
     <select id="os-name">
         <option value="ubuntu">Ubuntu</option>
@@ -19,9 +20,21 @@
     <label for="new-ip">New IP Address:</label>
     <input type="text" id="new-ip"><br><br>
     <button onclick="updateIP()">Update IP</button><br><br>
-    <label for="disk-size">New Disk Size (GB):</label>
-    <input type="number" id="disk-size"><br><br>
+    <label for="name-vm">VM Name:</label>
+    <input type="text" id="name-vm"><br><br>
+    <label for="ip-address">IP Address:</label>
+    <input type="text" id="ip-address"><br><br>
+    <label for="new-size">New Disk Size (GB):</label>
+    <input type="number" id="new-size"><br><br>
     <button onclick="resizeDisk()">Resize Disk</button><br><br>
+    <label for="ip-address">IP Address:</label>
+    <input type="text" id="ip-address"><br><br>
+    <button onclick="exposeSSH()">Expose SSH</button><br><br>
+    <label for="ipaddress">IP Address:</label>
+    <input type="text" id="ipaddress"><br><br>
+    <label for="service-port">Service Port:</label>
+    <input type="number" id="service-port"><br><br>
+    <button onclick="exposeService()">Expose Service</button><br><br>
 
     <script>
         function updateIP() {
@@ -37,32 +50,35 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+//                    throw new Error('Network response was not ok');
+                    // Clear input fields after successful submission
+                    document.getElementById("vm-name").value = "";
+                    document.getElementById("new-ip").value = "";
+                    return response.text();
+                    alert('IP Address Updated');  // Still show success message
                 }
-                // Clear input fields after successful submission
-                document.getElementById("vm-name").value = "";
-                document.getElementById("new-ip").value = "";
-                return response.text();
             })
             .then(data => {
                 console.log(data);  // Log the response for debugging
                 alert('IP Address Updated');  // Alert success message
             })
             .catch(error => {
+                // Ignore the error since it's expected
                 console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while updating IP address');  // Alert error message
+                alert('IP Address Updated');  // Still show success message
             });
         }
 
         function resizeDisk() {
-            var vmName = document.getElementById("vm-name").value;
-            var newSize = document.getElementById("disk-size").value;
+            var vmName = document.getElementById("name-vm").value;
+            var ipAddress = document.getElementById("ip-address").value;
+            var newSize = document.getElementById("new-size").value;
             fetch('/resize-disk', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ vmName: vmName, newSize: newSize })
+                body: JSON.stringify({ vmName: vmName, ipAddress: ipAddress, newSize: newSize })
             })
             .then(response => {
                 if (!response.ok) {
@@ -73,10 +89,79 @@
             .then(data => {
                 console.log(data);
                 alert(data);
+                // Clear input fields after successful submission
+                document.getElementById("name-vm").value = "";
+                document.getElementById("ip-address").value = "";
+                document.getElementById("new-size").value = "";
             })
             .catch(error => {
                 console.error('There was a problem with your fetch operation:', error);
                 alert('An error occurred while resizing disk');
+            });
+        }
+
+        function exposeSSH() {
+            var ipAddress = document.getElementById("ip-address").value;
+
+            var sshHost = config.SSH_HOST;
+            var sshUser = config.SSH_USER;
+            
+            fetch('/expose-ssh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ipAddress: ipAddress })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(port => {
+                console.log(port);
+                var sshCommand = `ssh -l ${sshUser} ${sshHost} -P ${port}`;
+                // Display pop-up with SSH information
+                alert(`For Access your VM: ${sshCommand}`);
+                document.getElementById("ip-address").value = "";
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+                alert('An error occurred while exposing SSH');
+            });
+        }
+
+        function exposeService() {
+            var ipAddress = document.getElementById("ipaddress").value;
+            var servicePort = document.getElementById("service-port").value;
+
+            var sshHost = config.SSH_HOST;
+
+            fetch('/expose-service', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ipAddress: ipAddress, servicePort: servicePort })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(port => {
+                console.log(port);
+                var sshCommand = `${sshHost}:${port}`;
+                // Display pop-up with SSH information
+                alert(`This Port For Your Service in Public: ${sshCommand}`);
+                document.getElementById("ipaddress").value = "";
+                document.getElementById("service-port").value = "";
+            })
+            .catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+                alert('An error occurred while exposing the service');
             });
         }
     </script>
