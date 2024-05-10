@@ -8,35 +8,75 @@
     <title>QEMU KVM Management</title>
 </head>
 <body>
-    <h1>QEMU KVM Management</h1>
-    <script src="config.js"></script>
-    <label for="os-name">Select OS:</label>
-    <select id="os-name">
-        <option value="ubuntu">Ubuntu</option>
-        <option value="centos">CentOS</option>
-    </select><br><br>
-    <label for="vm-name">VM Name:</label>
-    <input type="text" id="vm-name"><br><br>
-    <label for="new-ip">New IP Address:</label>
-    <input type="text" id="new-ip"><br><br>
-    <button onclick="updateIP()">Update IP</button><br><br>
-    <label for="name-vm">VM Name:</label>
-    <input type="text" id="name-vm"><br><br>
-    <label for="ip-address">IP Address:</label>
-    <input type="text" id="ip-address"><br><br>
-    <label for="new-size">New Disk Size (GB):</label>
-    <input type="number" id="new-size"><br><br>
-    <button onclick="resizeDisk()">Resize Disk</button><br><br>
-    <label for="ip-address">IP Address:</label>
-    <input type="text" id="ip-address"><br><br>
-    <button onclick="exposeSSH()">Expose SSH</button><br><br>
-    <label for="ipaddress">IP Address:</label>
-    <input type="text" id="ipaddress"><br><br>
-    <label for="service-port">Service Port:</label>
-    <input type="number" id="service-port"><br><br>
-    <button onclick="exposeService()">Expose Service</button><br><br>
+    <div id="login-page">
+        <h1>Login</h1>
+        <label for="username">Username:</label>
+        <input type="text" id="username"><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password"><br><br>
+        <button onclick="login()">Login</button>
+        <p id="login-error" style="color: red; display: none;">Invalid username or password</p>
+    </div>
+
+    <div id="main-page" style="display: none;">
+        <h1>QEMU KVM Management</h1>
+        <script src="config.js"></script>
+        <label for="os-name">Select OS:</label>
+        <select id="os-name">
+            <option value="ubuntu">Ubuntu</option>
+            <option value="centos">CentOS</option>
+        </select><br><br>
+        <label for="vm-name">VM Name:</label>
+        <input type="text" id="vm-name"><br><br>
+        <label for="new-ip">New IP Address:</label>
+        <input type="text" id="new-ip"><br><br>
+        <button onclick="updateIP()">Update IP</button><br><br>
+        <label for="name-vm">VM Name:</label>
+        <input type="text" id="name-vm"><br><br>
+        <label for="ip-address">IP Address:</label>
+        <input type="text" id="ip-address"><br><br>
+        <label for="new-size">New Disk Size (GB):</label>
+        <input type="number" id="new-size"><br><br>
+        <button onclick="resizeDisk()">Resize Disk</button><br><br>
+        <label for="ip-address">IP Address:</label>
+        <input type="text" id="ip-address"><br><br>
+        <button onclick="exposeSSH()">Expose SSH</button><br><br>
+        <label for="ipaddress">IP Address:</label>
+        <input type="text" id="ipaddress"><br><br>
+        <label for="service-port">Service Port:</label>
+        <input type="number" id="service-port"><br><br>
+        <button onclick="exposeService()">Expose Service</button><br><br>
+    </div>
 
     <script>
+        function login() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    // If login successful, hide login page and show main page
+                    document.getElementById("login-page").style.display = "none";
+                    document.getElementById("main-page").style.display = "block";
+                } else {
+                    return response.text().then(data => {
+                        alert(data);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during login');
+            });
+        }
+        
         function updateIP() {
             var vmName = document.getElementById("vm-name").value;
             var osName = document.getElementById("os-name").value;
