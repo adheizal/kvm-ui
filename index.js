@@ -86,7 +86,7 @@ app.post('/update-ip', async (req, res) => {
 app.post('/resize-disk', async (req, res) => {
     const { vmName, ipAddress, newSize } = req.body;
 
-    const scriptPath = '~/kvm/script/disk.sh'; // Update with the actual path
+    const scriptPath = `ssh -l ${config.ssh.user} ${config.ssh.host} bash /opt/script/disk.sh`; // Update with the actual path
 
     // Execute the shell script to resize the disk
     exec(`${scriptPath} ${vmName} ${ipAddress} ${newSize}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
