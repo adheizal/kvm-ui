@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "${1}" == "ubuntu" ]; then
-    TYPE_OUTPUT=$(ssh 10.0.1.254 "hostnamectl | grep ubuntu")
+    TYPE_OUTPUT=$(ssh $TEMPLATE_IP "hostnamectl | grep ubuntu")
     echo "Output of hostnamectl: ${TYPE_OUTPUT}"  # Debugging output
 
     # Extract Ubuntu type from the output
@@ -10,16 +10,16 @@ if [ "${1}" == "ubuntu" ]; then
 
     # Update IP based on Ubuntu type
     if [ "$TYPE" = "ubuntu-lite" ] || [ "$TYPE" = "ubuntu-kvm" ] ; then
-        ssh 10.0.1.254 "hostnamectl set-hostname '${2}'"
-        ssh 10.0.1.254 "sudo sed -i 's/10.0.1.254/${3}/' /etc/netplan/50-cloud-init.yaml"
-        ssh 10.0.1.254 "reboot"
+        ssh $TEMPLATE_IP "hostnamectl set-hostname '${2}'"
+        ssh $TEMPLATE_IP "sudo sed -i 's/${TEMPLATE_IP}/${3}/' /etc/netplan/50-cloud-init.yaml"
+        ssh $TEMPLATE_IP "reboot"
     else
-        ssh 10.0.1.254 "hostnamectl set-hostname '${2}'"
-        ssh 10.0.1.254 "sudo sed -i 's/10.0.1.254/${3}/' /etc/netplan/00-installer-config.yaml"
-        ssh 10.0.1.254 "reboot"
+        ssh $TEMPLATE_IP "hostnamectl set-hostname '${2}'"
+        ssh $TEMPLATE_IP "sudo sed -i 's/${TEMPLATE_IP}/${3}/' /etc/netplan/00-installer-config.yaml"
+        ssh $TEMPLATE_IP "reboot"
     fi
 else
-    ssh -l root 10.0.1.254 "hostnamectl set-hostname '${2}'"
-    ssh -l root 10.0.1.254 "sed -i 's/IPADDR=10.0.1.254/IPADDR=${3}/' /etc/sysconfig/network-scripts/ifcfg-eth0"
-    ssh -l root 10.0.1.254 "reboot"
+    ssh -l root $TEMPLATE_IP "hostnamectl set-hostname '${2}'"
+    ssh -l root $TEMPLATE_IP "sed -i 's/IPADDR=${TEMPLATE_IP}/IPADDR=${3}/' /etc/sysconfig/network-scripts/ifcfg-eth0"
+    ssh -l root $TEMPLATE_IP "reboot"
 fi

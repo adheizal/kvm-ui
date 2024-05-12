@@ -6,6 +6,8 @@ const config = {
     DB_PASSWORD: process.env.DB_PASSWORD,
     DB_HOST: process.env.DB_HOST,
     DB_NAME: process.env.DB_NAME,
+    LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
+    TEMPLATE_IP: process.env.TEMPLATE_IP
 }
 
 module.exports = config

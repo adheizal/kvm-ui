@@ -8,6 +8,9 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { Pool } = require('pg');
+// const logger = require('./logger');
+const { Logtail } = require("@logtail/node");
+const logtail = new Logtail(config.LOGTAIL_TOKEN);
 
 const app = express();
 const port = 3000;
@@ -40,20 +43,24 @@ app.post('/login', async (req, res) => {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (result.rows.length === 0) {
             res.status(401).send('Invalid username or password');
+            logtail.log('Authentication failed for user: ' + username);
             return;
         }
         const user = result.rows[0];
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             res.status(401).send('Invalid username or password');
+            logtail.log('Authentication failed for user: ' + username);
             return;
         }
         // Set user session
         req.session.userId = user.id;
         res.send('Login successful');
+        logtail.log('User logged in successfully: ' + username);
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send('Internal Server Error');
+        logtail.error('Error during login: ' + error.message);
     }
 });
 
@@ -68,17 +75,20 @@ app.post('/update-ip', async (req, res) => {
         ///     console.error(`Error: ${error ? error.message : stderr}`);
         ///     return res.status(500).send('An error occurred while updating IP address');
         /// }
-
+        logtail.error(error || stderr)
         console.log(`Commands executed successfully: ${stdout}`);
+        logtail.log('Commands executed successfully: ' + stdout);
 
         try {
             // Insert the details into the database
             await pool.query('INSERT INTO instances (vm_name, ip_address, os_name) VALUES ($1, $2, $3)', [vmName, newIP, osName]);
             console.log('Instance details stored in the database');
             res.send('IP Address Updated Successfully');
+            logtail.log('Instance details stored in the database: ' + pool.query);
         } catch (insertError) {
             console.error('Error storing instance details in the database:', insertError);
             res.status(500).send('An error occurred while updating IP address');
+            logtail.error('Error storing instance details in the database:', insertError);
         }
     });
 });
@@ -92,6 +102,7 @@ app.post('/resize-disk', async (req, res) => {
     exec(`${scriptPath} ${vmName} ${ipAddress} ${newSize}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
         if (error || stderr) {
             console.error(`Error: ${error ? error.message : stderr}`);
+            logtail.log(error, stdout, stderr);
             if (stderr.includes("hostname contains invalid characters")) {
                 // Handle the expected error
                 return res.status(200).send('Disk resized successfully');
@@ -101,22 +112,26 @@ app.post('/resize-disk', async (req, res) => {
         }
 
         console.log(`Commands executed successfully: ${stdout}`);
+        logtail.log(`Commands executed successfully: ${stdout}`);
 
         try {
             // Check if the instance exists in the database
             const result = await pool.query('SELECT * FROM instances WHERE vm_name = $1', [vmName]);
             console.log('Result:', result.rows);
+            logtail.log('Result:', result.rows);
         
             if (result.rows.length === 0) {
                 // If the instance doesn't exist, insert it with default disk size 30 + newSize
                 await pool.query('INSERT INTO instances (vm_name, ip_address, os_name, disk_size) VALUES ($1, $2, $3, $4)', [vmName, ipAddress, '', 30 + newSize]);
                 console.log('New instance inserted into the database with disk size:', 30 + newSize);
+                logtail.log('New instance inserted into the database with disk size:', 30 + newSize);
             } else {
                 // If the instance exists, update its disk size by adding the new size
                 const currentDiskSize = result.rows[0].disk_size;
                 const updatedDiskSize = currentDiskSize + newSize;
                 await pool.query('UPDATE instances SET disk_size = $1 WHERE vm_name = $2', [updatedDiskSize, vmName]);
                 console.log('Disk size updated in the database:', updatedDiskSize);
+                logtail.log('Disk size updated in the database:', updatedDiskSize);
             }
         
             // Send success response
@@ -124,6 +139,7 @@ app.post('/resize-disk', async (req, res) => {
         } catch (insertError) {
             console.error('Error storing disk size in the database:', insertError);
             res.status(500).send('An error occurred while resizing disk');
+            logtail.error('Error storing disk size in the database:', insertError);
         }        
     });
 });
@@ -213,4 +229,5 @@ app.post('/expose-service', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is listening at http://0.0.0.0:${port}`);
+    logtail.log('Server started and listening at port ' + port);
 });
