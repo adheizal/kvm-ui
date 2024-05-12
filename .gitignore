@@ -2,3 +2,4 @@
 .ssh
 .env
 index-copy.js
+logger.js
