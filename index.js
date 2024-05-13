@@ -107,7 +107,7 @@ app.post('/resize-disk', async (req, res) => {
             logtail.log(error, stdout, stderr);
             if (stderr.includes("hostname contains invalid characters")) {
                 // Handle the expected error
-                return res.status(200).send('Disk resized successfully');
+                console.log('Disk resized successfully');
             } else {
                 return res.status(500).send('An error occurred while resizing disk');
             }
