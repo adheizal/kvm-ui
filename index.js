@@ -72,10 +72,6 @@ app.post('/update-ip', async (req, res) => {
 
     // Execute the shell script to update the IP address
     exec(`${scriptPath} ${osName} ${vmName} ${newIP}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
-        /// if (error || stderr) {
-        ///     console.error(`Error: ${error ? error.message : stderr}`);
-        ///     return res.status(500).send('An error occurred while updating IP address');
-        /// }
         logtail.error(error || stderr)
         console.log(`Commands executed successfully: ${stdout}`);
         logtail.log('Commands executed successfully: ' + stdout);
@@ -87,9 +83,9 @@ app.post('/update-ip', async (req, res) => {
             res.send('IP Address Updated Successfully');
             logtail.log('Instance details stored in the database: ' + pool.query);
         } catch (insertError) {
-            console.error('Error storing instance details in the database:', insertError);
+            console.error('Error storing instance details in the database:' + insertError);
             res.status(500).send('An error occurred while updating IP address');
-            logtail.error('Error storing instance details in the database:', insertError);
+            logtail.error('Error storing instance details in the database:' + insertError);
         }
     });
 });
@@ -105,12 +101,6 @@ app.post('/resize-disk', async (req, res) => {
         if (error || stderr) {
             console.error(`Error: ${error ? error.message : stderr}`);
             logtail.log(error, stdout, stderr);
-            if (stderr.includes("hostname contains invalid characters")) {
-                // Handle the expected error
-                console.log('Disk resized successfully');
-            } else {
-                return res.status(500).send('An error occurred while resizing disk');
-            }
         }
 
         console.log(`Commands executed successfully: ${stdout}`);
@@ -120,7 +110,7 @@ app.post('/resize-disk', async (req, res) => {
             // Check if the instance exists in the database
             const result = await pool.query('SELECT * FROM instances WHERE vm_name = $1', [vmName]);
             console.log('Result:', result.rows);
-            logtail.log('Result:', result.rows);
+            logtail.log('Result:' + result.rows);
         
             if (result.rows.length === 0) {
                 // If the instance doesn't exist, insert it with default disk size 30 + newSize
@@ -130,10 +120,11 @@ app.post('/resize-disk', async (req, res) => {
             } else {
                 // If the instance exists, update its disk size by adding the new size
                 const currentDiskSize = result.rows[0].disk_size;
-                const updatedDiskSize = currentDiskSize + newSize;
-                await pool.query('UPDATE instances SET disk_size = $1 WHERE vm_name = $2', [updatedDiskSize, vmName]);
+                const updatedDiskSize = parseInt(currentDiskSize) + parseInt(newSize);
+                console.log(typeof updatedDiskSize, typeof currentDiskSize)
+                await pool.query('UPDATE instances SET disk_size = $1 WHERE vm_name = $2', [parseInt(updatedDiskSize), vmName]);
                 console.log('Disk size updated in the database:', updatedDiskSize);
-                logtail.log('Disk size updated in the database:', updatedDiskSize);
+                logtail.log('Disk size updated in the database:' + updatedDiskSize);
             }
         
             // Send success response
@@ -141,7 +132,7 @@ app.post('/resize-disk', async (req, res) => {
         } catch (insertError) {
             console.error('Error storing disk size in the database:', insertError);
             res.status(500).send('An error occurred while resizing disk');
-            logtail.error('Error storing disk size in the database:', insertError);
+            logtail.error('Error storing disk size in the database:' + insertError);
         }        
     });
 });
@@ -165,7 +156,7 @@ app.post('/expose-ssh', async (req, res) => {
         const portMatch = stdout.match(/Random Port: (\d+)/);
         if (!portMatch) {
             console.error('Failed to extract port number from output:', stdout);
-            logtail.error('Failed to extract port number from output:', stdout)
+            logtail.error('Failed to extract port number from output:' + stdout)
             return res.status(500).send('Failed to extract port number from output');
         }
 
@@ -182,7 +173,7 @@ app.post('/expose-ssh', async (req, res) => {
         } catch (updateError) {
             console.error('Error updating SSH port in the database:', updateError);
             res.status(500).send('An error occurred while updating SSH port');
-            logtail.error('Error updating SSH port in the database:', updateError)
+            logtail.error('Error updating SSH port in the database:' + updateError)
         }
     });
 });
@@ -206,7 +197,7 @@ app.post('/expose-service', async (req, res) => {
         const portMatch = stdout.match(/Random Port: (\d+)/);
         if (!portMatch) {
             console.error('Failed to extract port number from output:', stdout);
-            logtail.error('Failed to extract port number from output:', stdout);
+            logtail.error('Failed to extract port number from output:' + stdout);
             return res.status(500).send('Failed to extract port number from output');
         }
 
@@ -237,7 +228,7 @@ app.post('/expose-service', async (req, res) => {
         } catch (updateError) {
             console.error('Error updating service ports in the database:', updateError);
             res.status(500).send('An error occurred while updating service ports');
-            logtail.error('Error updating service ports in the database:', updateError);
+            logtail.error('Error updating service ports in the database:' + updateError);
         }
     });
 });
