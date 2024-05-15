@@ -140,7 +140,7 @@ app.post('/resize-disk', async (req, res) => {
 app.post('/expose-ssh', async (req, res) => {
     const { ipAddress } = req.body;
 
-    const scriptPath = `ssh -l ${config.ssh.user} ${config.ssh.host} bash /opt/script/ssh.sh`; // Update with the actual path
+    const scriptPath = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} bash /opt/script/ssh.sh`; // Update with the actual path
     logtail.log(scriptPath)
 
     // Execute the shell script to expose SSH
@@ -181,7 +181,7 @@ app.post('/expose-ssh', async (req, res) => {
 app.post('/expose-service', async (req, res) => {
     const { ipAddress, servicePort } = req.body;
 
-    const scriptPath = `ssh -l ${config.ssh.user} ${config.ssh.host} bash /opt/script/service.sh`; // Update with the actual path
+    const scriptPath = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} bash /opt/script/service.sh`; // Update with the actual path
     logtail.log(scriptPath)
 
     // Execute the shell script to expose the service
@@ -231,6 +231,51 @@ app.post('/expose-service', async (req, res) => {
             logtail.error('Error updating service ports in the database:' + updateError);
         }
     });
+});
+
+app.post('/check-ip', async (req, res) => {
+    const { ipAddress } = req.body;
+    const scriptPath = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} nmap -sP -PR ${ipAddress}`; // Update with the actual path
+    console.log(scriptPath)
+    logtail.log(scriptPath)
+
+    // Run the nmap command to check the IP address
+    exec(`${scriptPath}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
+        if (error) {
+            logtail.error(`Error: ${error.message}`);
+            console.error(`Error: ${error.message}`);
+            return res.status(500).send('An error occurred while checking the IP address');
+        }
+
+        if (stderr) {
+            logtail.warn(`stderr: ${stderr}`);
+            console.warn(`stderr: ${stderr}`);
+        }
+
+        logtail.info(`nmap output: ${stdout}`);
+        console.info(`nmap output: ${stdout}`);
+
+        // Check if the IP address is up or down
+        if (stdout.includes('Host is up')) {
+            res.send('IP Already Used');
+        } else if (stdout.includes('Host seems down')) {
+            res.send('IP Available');
+        } else {
+            res.send('Unable to determine IP status');
+        }
+    });
+});
+
+app.get('/list-vms', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT vm_name, ip_address, ssh_port, service_ports FROM public.instances');
+        logtail.log(result.rows);
+        res.json(result.rows);
+    } catch (error) {
+        logtail.error('Error fetching list of VMs:', error);
+        console.error('Error fetching list of VMs:', error);
+        res.status(500).send('An error occurred while fetching list of VMs');
+    }
 });
 
 app.listen(port, () => {
