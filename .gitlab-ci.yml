@@ -1,0 +1,19 @@
+before_script:
+  - apt-get update -qq
+  - apt-get install -qq git
+  # Setup SSH deploy keys
+  - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    
+deploy_prod:
+  environment:
+    name: prod
+  script:
+    - ssh root@$HOST_TARGETS "cd ~/kvm-ui && git pull"
+    - ssh root@$HOST_TARGETS "cd ~/kvm-ui && npm install"
+    - ssh root@$HOST_TARGETS "source ~/kvm-ui/.env && pm2 restart ~/kvm-ui/index.js"
+  only:
+    - main
