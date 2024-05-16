@@ -12,9 +12,6 @@ deploy_prod:
   environment:
     name: prod
   script:
-    - ssh root@$HOST_TARGETS "echo \$PATH"
-    - ssh root@$HOST_TARGETS "which npm"
-    - ssh root@$HOST_TARGETS "npm -v"
-    - ssh root@$HOST_TARGETS "cd ~/kvm-ui && npm install"
+    - ssh root@$HOST_TARGETS "bash ~/script/run.sh"
   only:
     - main
