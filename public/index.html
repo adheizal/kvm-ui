@@ -2,300 +2,435 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QEMU KVM Management</title>
-</head>
-<body>
-    <div id="login-page">
-        <h1>Login</h1>
-        <label for="username">Username:</label>
-        <input type="text" id="username"><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password"><br><br>
-        <button onclick="login()">Login</button>
-        <p id="login-error" style="color: red; display: none;">Invalid username or password</p>
-    </div>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>QEMU KVM Management</title>
+		<style>
+			body, html {
+				height: 100%;
+				margin: 0;
+				display: flex;
+				background-color: #f0f0f0;
+				font-family: Arial, sans-serif;
+				justify-content: center;
+			}
+			#login-page {
+				width: 100%;
+				max-width: 400px;
+				justify-content: center;
+				align-items: center;
+			}
+			#login-error {
+				margin-top: 20px;
+				color: red;
+			}
+			#main-page {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 20px;
+			}
+			h1 {
+				margin-bottom: 20px;
+			}
+			.card {
+				background-color: #ffffff;
+				border-radius: 10px;
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+				padding: 20px;
+				margin: 10px;
+				width: 200px;
+				text-align: center;
+			}
+			.card label {
+				display: block;
+				margin-bottom: 5px;
+				text-align: left;
+			}
+			.card input, .card select, .card button {
+				width: 100%;
+				margin-bottom: 15px;
+				padding: 10px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+				box-sizing: border-box;
+			}
+			.card button {
+				background-color: #0375e6;
+				color: white;
+				border: none;
+				cursor: pointer;
+			}
+			.card button:hover {
+				background-color: #06c;
+			}
+			.grid-container {
+				display: grid;
+				grid-template-columns: auto auto auto auto auto;
+				padding: 10px;
+				justify-content:space-around;
+			}
+			.grid-item {
+				background-color: rgba(255, 255, 255, 0.8);
+				font-size: 30px;
+				text-align: center;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+			}
+			.grid-button{
+				margin-top:20%
+			}
+			table {
+				border-collapse: collapse;
+				border-spacing: 0;
+				width: 100%;
+				border: 1px solid #ddd;
+			}
+			thead{
+				position: sticky;
+				top: 0;
+				background-color: #fff; /* Optional background color for the header */
+				z-index: 1;
+			}
+			th, td {
+				text-align: left;
+				padding: 16px;
+			}
+			th {
+				background-color: #0375e6;
+				color: white;
+			}
+			tr:nth-child(even) {
+				background-color: #f2f8ff;
+			}
+			.btn-default{
+				width: 100%;
+				margin-bottom: 15px;
+				padding: 10px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+				box-sizing: border-box;
+				background-color: #0375e6;
+				color: white;
+				border: none;
+				cursor: pointer;
+			}
+			.btn-default:hover {
+				background-color: #06c;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="login-page" style="display: flex;">
+			<div class="card w-full" style="width:250px;">
+				<h1>Login Page</h1>
+				<input type="text" id="username" placeholder="Username" onKeypress="handleEnter(event)"><br><br>
+				<input type="password" id="password" placeholder="Password" onkeypress="handleEnter(event)"><br><br>
+				<button onclick="login()">Login</button>
+				<p id="login-error" style="color: red; display: none;">Invalid username or password</p>
+			</div>
+		</div>
 
-    <div id="main-page" style="display: none;">
-        <h1>QEMU KVM Management</h1>
-        <script src="config.js"></script>
-        <label for="os-name">Select OS:</label>
-        <select id="os-name">
-            <option value="ubuntu">Ubuntu</option>
-            <option value="centos">CentOS</option>
-        </select><br><br>
-        <label for="vm-name">VM Name:</label>
-        <input type="text" id="vm-name"><br><br>
-        <label for="new-ip">New IP Address:</label>
-        <input type="text" id="new-ip"><br><br>
-        <button onclick="updateIP()">Update IP</button><br><br>
-        <label for="name-vm">VM Name:</label>
-        <input type="text" id="name-vm"><br><br>
-        <label for="ip-address">IP Address:</label>
-        <input type="text" id="ip-address"><br><br>
-        <label for="new-size">New Disk Size (GB):</label>
-        <input type="number" id="new-size"><br><br>
-        <button onclick="resizeDisk()">Resize Disk</button><br><br>
-        <label for="ip-address">IP Address:</label>
-        <input type="text" id="ip-address"><br><br>
-        <button onclick="exposeSSH()">Expose SSH</button><br><br>
-        <label for="ipaddress">IP Address:</label>
-        <input type="text" id="ipaddress"><br><br>
-        <label for="service-port">Service Port:</label>
-        <input type="number" id="service-port"><br><br>
-        <button onclick="exposeService()">Expose Service</button><br><br>
-        <label for="ip-Address">IP Address:</label>
-        <input type="text" id="ip-Address"><br><br>
-        <button onclick="checkIP()">Check IPs</button><br><br>
-        <button onclick="listVMS()">List VMs</button><br><br>
-        <ul id="vm-list"></ul>
-        <style>
-            table {
-                border-collapse: collapse;
-                width: 100%;
-            }
-    
-            th, td {
-                border: 1px solid black;
-                padding: 8px;
-                text-align: left;
-            }
-    
-            th {
-                background-color: #f2f2f2;
-            }
-        </style>
-        <h2>List of VMs</h2>
-        <table id="vm-table">
-            <thead>
-                <tr>
-                    <th>VM Name</th>
-                    <th>IP Address</th>
-                    <th>SSH Port</th>
-                    <th>Service Ports</th>
-                </tr>
-            </thead>
-            <tbody id="vm-table-body"></tbody>
-        </table>
-    </div>
+		<div id="main-page" style="display: none;">
+			<h1>QEMU KVM Management</h1>
+			<div class="card w-full">
+				<label for="os-name">Select OS:</label>
+				<div class="select">
+					<select id="os-name">
+						<option value="ubuntu">Ubuntu</option>
+						<option value="centos">CentOS</option>
+					</select>
+				</div>
+			</div>
+			<div class="grid-container w-full">
+				<div class="card grid-item">
+					<div>
+						<input type="text" id="vm-name" placeholder="VM Name:">
+						<input type="text" id="new-ip" placeholder="New IP Address:">
+					</div>
+					<div>
+						<button onclick="updateIP()">Update IP</button>
+					</div>
+				</div>
+				<div class="card grid-item">
+					<div>
+						<input type="text" id="name-vm" placeholder="VM Name:">
+						<input type="text" id="ip-address" placeholder="IP Address:">
+						<input type="number" id="new-size" placeholder="New Disk Size (GB):">
+					</div>
+					<div>
+						<button onclick="resizeDisk()">Resize Disk</button>
+					</div>
+				</div>
+				<div class="card grid-item">
+					<div>
+						<input type="text" id="ip-address-ssh" placeholder="IP Address:">
+					</div>
+					<div>
+						<button onclick="exposeSSH()">Expose SSH</button>
+					</div>
+				</div>
+				<div class="card grid-item">
+					<div>
+						<input type="text" id="ipaddress" placeholder="IP Address:">
+						<input type="number" id="service-port" placeholder="Service Port:">
+					</div>
+					<div>
+						<button onclick="exposeService()">Expose Service</button>
+					</div>
+				</div>
+				<div class="card grid-item">
+					<div>
+						<input type="text" id="ip-Address" placeholder="IP Address:">
+					</div>
+					<div>
+						<button onclick="checkIP()">Check IPs</button>
+					</div>
+				</div>
+			</div>
+			<div style="width:100%;">
+				<ul id="vm-list"></ul>
+				<h2>List of VMs</h2>
+				<button class="btn-default" onclick="listVMS()" style="max-width: 250px; margin">Show List</button>
+				<div style="height: 400px; overflow-y: auto;">
+					<table id="vm-table">
+						<thead>
+							<tr>
+								<th>VM Name</th>
+								<th>IP Address</th>
+								<th>SSH Port</th>
+								<th>Service Ports</th>
+							</tr>
+						</thead>
+						<tbody id="vm-table-body"></tbody>
+					</table>
+				</div>
+				<br><br>
+			</div>
+		</div>
 
-    <script>
-        function login() {
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
+		<script>
+			function handleEnter(event) {
+				if (event.key === "Enter") {
+					login();
+				}
+			}
+			function login() {
+				var username = document.getElementById("username").value;
+				var password = document.getElementById("password").value;
 
-            fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username: username, password: password })
-            })
-            .then(response => {
-                if (response.status === 200) {
-                    // If login successful, hide login page and show main page
-                    document.getElementById("login-page").style.display = "none";
-                    document.getElementById("main-page").style.display = "block";
-                } else {
-                    return response.text().then(data => {
-                        alert(data);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred during login');
-            });
-        }
-        
-        function updateIP() {
-            var vmName = document.getElementById("vm-name").value;
-            var osName = document.getElementById("os-name").value;
-            var newIP = document.getElementById("new-ip").value;
-            fetch('/update-ip', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ vmName: vmName, osName: osName, newIP: newIP })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // throw new Error('Network response was not ok');
-                    // Clear input fields after successful submission
-                    document.getElementById("vm-name").value = "";
-                    document.getElementById("new-ip").value = "";
-                    return response.text();
-                    alert('IP Address Updated');  // Still show success message
-                }
-            })
-            .then(data => {
-                console.log(data);  // Log the response for debugging
-                alert('IP Address Updated');  // Alert success message
-            })
-            .catch(error => {
-                // Ignore the error since it's expected
-                console.error('There was a problem with your fetch operation:', error);
-                alert('IP Address Updated');  // Still show success message
-            });
-        }
+				fetch('/login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({username: username, password: password})
+				})
+						  .then(response => {
+							  if (response.status === 200) {
+								  // If login successful, hide login page and show main page
+								  document.getElementById("login-page").style.display = "none";
+								  document.getElementById("main-page").style.display = "flex";
+							  } else {
+								  return response.text().then(data => {
+									  alert(data);
+								  });
+							  }
+						  })
+						  .catch(error => {
+							  console.error('Error:', error);
+							  alert('An error occurred during login');
+						  });
+			}
 
-        function resizeDisk() {
-            var vmName = document.getElementById("name-vm").value;
-            var ipAddress = document.getElementById("ip-address").value;
-            var newSize = document.getElementById("new-size").value;
-            fetch('/resize-disk', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ vmName: vmName, ipAddress: ipAddress, newSize: newSize })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                console.log(data);
-                alert('Disk resized successfully');
-                // Clear input fields after successful submission
-                document.getElementById("name-vm").value = "";
-                document.getElementById("ip-address").value = "";
-                document.getElementById("new-size").value = "";
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while resizing disk');
-            });
-        }
+			function updateIP() {
+				var vmName = document.getElementById("vm-name").value;
+				var osName = document.getElementById("os-name").value;
+				var newIP = document.getElementById("new-ip").value;
+				fetch('/update-ip', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({vmName: vmName, osName: osName, newIP: newIP})
+				})
+						  .then(response => {
+							  if (!response.ok) {
+								  //                    throw new Error('Network response was not ok');
+								  // Clear input fields after successful submission
+								  document.getElementById("vm-name").value = "";
+								  document.getElementById("new-ip").value = "";
+								  return response.text();
+								  alert('IP Address Updated');  // Still show success message
+							  }
+						  })
+						  .then(data => {
+							  console.log(data);  // Log the response for debugging
+							  alert('IP Address Updated');  // Alert success message
+						  })
+						  .catch(error => {
+							  // Ignore the error since it's expected
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('IP Address Updated');  // Still show success message
+						  });
+			}
 
-        function exposeSSH() {
-            var ipAddress = document.getElementById("ip-address").value;
+			function resizeDisk() {
+				var vmName = document.getElementById("name-vm").value;
+				var ipAddress = document.getElementById("ip-address").value;
+				var newSize = document.getElementById("new-size").value;
+				fetch('/resize-disk', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({vmName: vmName, ipAddress: ipAddress, newSize: newSize})
+				})
+						  .then(response => {
+							  if (!response.ok) {
+								  throw new Error('Network response was not ok');
+							  }
+							  return response.text();
+						  })
+						  .then(data => {
+							  console.log(data);
+							  alert('Disk resized successfully');
+							  // Clear input fields after successful submission
+							  document.getElementById("name-vm").value = "";
+							  document.getElementById("ip-address").value = "";
+							  document.getElementById("new-size").value = "";
+						  })
+						  .catch(error => {
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('An error occurred while resizing disk');
+						  });
+			}
 
-            var sshHost = config.SSH_HOST;
-            var sshUser = config.SSH_USER;
-            
-            fetch('/expose-ssh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ipAddress: ipAddress })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(port => {
-                console.log(port);
-                var sshCommand = `ssh -l ${sshUser} ${sshHost} -P ${port}`;
-                // Display pop-up with SSH information
-                alert(`For Access your VM: ${sshCommand}`);
-                document.getElementById("ip-address").value = "";
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while exposing SSH');
-            });
-        }
+			function exposeSSH() {
+				var ipAddress = document.getElementById("ip-address").value;
 
-        function exposeService() {
-            var ipAddress = document.getElementById("ipaddress").value;
-            var servicePort = document.getElementById("service-port").value;
+				var sshHost = config.SSH_HOST;
+				var sshUser = config.SSH_USER;
 
-            var sshHost = config.SSH_HOST;
+				fetch('/expose-ssh', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ipAddress: ipAddress})
+				})
+						  .then(response => {
+							  if (!response.ok) {
+								  throw new Error('Network response was not ok');
+							  }
+							  return response.text();
+						  })
+						  .then(port => {
+							  console.log(port);
+							  var sshCommand = `ssh -l ${sshUser} ${sshHost} -P ${port}`;
+							  // Display pop-up with SSH information
+							  alert(`For Access your VM: ${sshCommand}`);
+							  document.getElementById("ip-address").value = "";
+						  })
+						  .catch(error => {
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('An error occurred while exposing SSH');
+						  });
+			}
 
-            fetch('/expose-service', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ipAddress: ipAddress, servicePort: servicePort })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(port => {
-                console.log(port);
-                var sshCommand = `${sshHost}:${port}`;
-                // Display pop-up with SSH information
-                alert(`This Port For Your Service in Public: ${sshCommand}`);
-                document.getElementById("ipaddress").value = "";
-                document.getElementById("service-port").value = "";
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while exposing the service');
-            });
-        }
+			function exposeService() {
+				var ipAddress = document.getElementById("ipaddress").value;
+				var servicePort = document.getElementById("service-port").value;
 
-        function checkIP() {
-            var ipAddress = document.getElementById("ip-Address").value;
+				var sshHost = config.SSH_HOST;
 
-            fetch('/check-ip', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ipAddress: ipAddress })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(result => {
-                alert(result);
-                // document.getElementById("result").textContent = result;
-                document.getElementById("ip-Address").value = "";
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while checking the IP address');
-            });
-        }
-        
-        function listVMS() {
-            fetch('/list-vms')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(vmList => {
-                const vmTableBody = document.getElementById('vm-table-body');
-                vmTableBody.innerHTML = ''; // Clear previous table rows
-            
-                vmList.forEach(vm => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${vm.vm_name}</td>
-                        <td>${vm.ip_address}</td>
-                        <td>${vm.ssh_port}</td>
-                        <td>${vm.service_ports}</td>
-                    `;
-                    vmTableBody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('There was a problem with your fetch operation:', error);
-                alert('An error occurred while fetching the list of VMs');
-            });
-        }
+				fetch('/expose-service', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ipAddress: ipAddress, servicePort: servicePort})
+				})
+						  .then(response => {
+							  if (!response.ok) {
+								  throw new Error('Network response was not ok');
+							  }
+							  return response.text();
+						  })
+						  .then(port => {
+							  console.log(port);
+							  var sshCommand = `${sshHost}:${port}`;
+							  // Display pop-up with SSH information
+							  alert(`This Port For Your Service in Public: ${sshCommand}`);
+							  document.getElementById("ipaddress").value = "";
+							  document.getElementById("service-port").value = "";
+						  })
+						  .catch(error => {
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('An error occurred while exposing the service');
+						  });
+			}
 
-        // Call the fetchVMs function when the page loads
-        window.onload = fetchVMs;
-    </script>
-</body>
+			function checkIP() {
+				var ipAddress = document.getElementById("ip-Address").value;
+
+				fetch('/check-ip', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ipAddress: ipAddress})
+				})
+						  .then(response => {
+							  if (!response.ok) {
+								  throw new Error('Network response was not ok');
+							  }
+							  return response.text();
+						  })
+						  .then(result => {
+							  alert(result);
+							  // document.getElementById("result").textContent = result;
+							  document.getElementById("ip-Address").value = "";
+						  })
+						  .catch(error => {
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('An error occurred while checking the IP address');
+						  });
+			}
+
+			function listVMS() {
+				fetch('/list-vms')
+						  .then(response => {
+							  if (!response.ok) {
+								  throw new Error('Network response was not ok');
+							  }
+							  return response.json();
+						  })
+						  .then(vmList => {
+							  const vmTableBody = document.getElementById('vm-table-body');
+							  vmTableBody.innerHTML = ''; // Clear previous table rows
+
+							  vmList.forEach(vm => {
+								  const row = document.createElement('tr');
+								  row.innerHTML = `
+								  <td>${vm.vm_name}</td>
+								  <td>${vm.ip_address}</td>
+								  <td>${vm.ssh_port}</td>
+								  <td>${vm.service_ports}</td>
+							 `;
+								  vmTableBody.appendChild(row);
+							  });
+						  })
+						  .catch(error => {
+							  console.error('There was a problem with your fetch operation:', error);
+							  alert('An error occurred while fetching the list of VMs');
+						  });
+			}
+
+			// Call the fetchVMs function when the page loads
+			window.onload = fetchVMs;
+		</script>
+	</body>
 </html>
