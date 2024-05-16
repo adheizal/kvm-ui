@@ -60,7 +60,7 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send('Internal Server Error');
-        logtail.error('Error during login: ' + error.message);
+        logtail.error('Error during login: ' + error);
     }
 });
 
