@@ -30,7 +30,10 @@ const pool = new Pool({
     host: config.DB_HOST,
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
-    ssl: true
+    port: config.DB_PORT,
+    ssl: false,
+    connectionTimeoutMillis: 10000, // connection timeout in milliseconds
+    idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
 
 app.use(express.static('public'));
