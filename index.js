@@ -117,7 +117,9 @@ app.post('/resize-disk', async (req, res) => {
         
             if (result.rows.length === 0) {
                 // If the instance doesn't exist, insert it with default disk size 30 + newSize
-                await pool.query('INSERT INTO instances (vm_name, ip_address, os_name, disk_size) VALUES ($1, $2, $3, $4)', [vmName, ipAddress, '', 30 + newSize]);
+                const currentDiskSize = 30;
+                const updatedDiskSize = parseInt(currentDiskSize) + parseInt(newSize);
+                await pool.query('INSERT INTO instances (vm_name, ip_address, os_name, disk_size) VALUES ($1, $2, $3, $4)', [vmName, ipAddress, '', parseInt(updatedDiskSize)]);
                 console.log('New instance inserted into the database with disk size:', 30 + newSize);
                 logtail.log('New instance inserted into the database with disk size:', 30 + newSize);
             } else {
