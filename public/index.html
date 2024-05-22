@@ -311,8 +311,8 @@
 			function exposeSSH() {
 				var ipAddress = document.getElementById("ip-address").value;
 
-				var sshHost = config.SSH_HOST;
-				var sshUser = config.SSH_USER;
+				var SSH_HOST = config.SSH_HOST;
+				var SSH_USER = config.SSH_USER;
 
 				fetch('/expose-ssh', {
 					method: 'POST',
@@ -329,7 +329,7 @@
 						  })
 						  .then(port => {
 							  console.log(port);
-							  var sshCommand = `ssh -l ${sshUser} ${sshHost} -P ${port}`;
+							  var sshCommand = `ssh -l ${SSH_USER} ${SSH_HOST} -P ${port}`;
 							  // Display pop-up with SSH information
 							  alert(`For Access your VM: ${sshCommand}`);
 							  document.getElementById("ip-address").value = "";
@@ -344,7 +344,7 @@
 				var ipAddress = document.getElementById("ipaddress").value;
 				var servicePort = document.getElementById("service-port").value;
 
-				var sshHost = config.SSH_HOST;
+				var SSH_HOST = config.SSH_HOST;
 
 				fetch('/expose-service', {
 					method: 'POST',
@@ -361,7 +361,7 @@
 						  })
 						  .then(port => {
 							  console.log(port);
-							  var sshCommand = `${sshHost}:${port}`;
+							  var sshCommand = `${SSH_HOST}:${port}`;
 							  // Display pop-up with SSH information
 							  alert(`This Port For Your Service in Public: ${sshCommand}`);
 							  document.getElementById("ipaddress").value = "";
