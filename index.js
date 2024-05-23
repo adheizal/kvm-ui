@@ -31,7 +31,7 @@ const pool = new Pool({
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
-    ssl: false,
+    ssl: true,
     connectionTimeoutMillis: 10000, // connection timeout in milliseconds
     idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
@@ -70,7 +70,7 @@ app.post('/login', async (req, res) => {
 app.post('/update-ip', async (req, res) => {
     const { vmName, osName, newIP } = req.body;
 
-    const scriptPath = 'ssh -l ${config.SSH_USER} ${config.SSH_HOST} bash /opt/script/update.sh';
+    const scriptPath = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} bash /opt/script/update.sh`;
     logtail.log(scriptPath)
 
     // Execute the shell script to update the IP address
@@ -147,16 +147,10 @@ app.post('/expose-ssh', async (req, res) => {
 
     const scriptPath = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} bash /opt/script/ssh.sh`; // Update with the actual path
     logtail.log(scriptPath)
+    console.log(`IP Address VM ${ipAddress}`);
 
     // Execute the shell script to expose SSH
     exec(`${scriptPath} ${ipAddress}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
-        if (error || stderr) {
-            console.error(`Error: ${error ? error.message : stderr}`);
-            console.log('stdout:', stdout);
-            console.log('stderr:', stderr);
-            logtail.log(stdout, stdout)
-            return res.status(500).send('An error occurred while exposing SSH');
-        }
 
         const portMatch = stdout.match(/Random Port: (\d+)/);
         if (!portMatch) {
@@ -174,7 +168,8 @@ app.post('/expose-ssh', async (req, res) => {
             await pool.query('UPDATE instances SET ssh_port = $1 WHERE ip_address = $2', [randomPort, ipAddress]);
             console.log('SSH port updated in the database');
             logtail.log(pool.query)
-            res.send(randomPort.toString());
+            const sshCommand = `ssh -l ${config.SSH_USER} ${config.SSH_HOST} -p ${randomPort}`;
+            res.send(sshCommand);
         } catch (updateError) {
             console.error('Error updating SSH port in the database:', updateError);
             res.status(500).send('An error occurred while updating SSH port');
@@ -182,6 +177,7 @@ app.post('/expose-ssh', async (req, res) => {
         }
     });
 });
+
 
 app.post('/expose-service', async (req, res) => {
     const { ipAddress, servicePort } = req.body;
@@ -191,13 +187,6 @@ app.post('/expose-service', async (req, res) => {
 
     // Execute the shell script to expose the service
     exec(`${scriptPath} ${ipAddress} ${servicePort}`, { cwd: '/tmp' }, async (error, stdout, stderr) => {
-        if (error || stderr) {
-            console.error(`Error: ${error ? error.message : stderr}`);
-            console.log('stdout:', stdout);
-            console.log('stderr:', stderr);
-            logtail.log(stdout, stderr)
-            return res.status(500).send('An error occurred while exposing the service');
-        }
 
         const portMatch = stdout.match(/Random Port: (\d+)/);
         if (!portMatch) {
@@ -229,7 +218,8 @@ app.post('/expose-service', async (req, res) => {
             console.log('Service ports updated in the database');
             logtail.log('Service ports updated in the database');
 
-            res.send(randomPort.toString());
+            const sshCommand = `${config.SSH_HOST}:${randomPort}`;
+            res.send(sshCommand);
         } catch (updateError) {
             console.error('Error updating service ports in the database:', updateError);
             res.status(500).send('An error occurred while updating service ports');

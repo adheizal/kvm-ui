@@ -309,10 +309,7 @@
 			}
 
 			function exposeSSH() {
-				var ipAddress = document.getElementById("ip-address").value;
-
-				var SSH_HOST = config.SSH_HOST;
-				var SSH_USER = config.SSH_USER;
+				var ipAddress = document.getElementById("ip-address-ssh").value;
 
 				fetch('/expose-ssh', {
 					method: 'POST',
@@ -327,13 +324,11 @@
 							  }
 							  return response.text();
 						  })
-						  .then(port => {
-							  console.log(port);
-							  var sshCommand = `ssh -l ${SSH_USER} ${SSH_HOST} -P ${port}`;
-							  // Display pop-up with SSH information
-							  alert(`For Access your VM: ${sshCommand}`);
-							  document.getElementById("ip-address").value = "";
-						  })
+						  .then(command => {
+            				  console.log(command);
+            				  alert(`For Access your VM: ${command}`);
+            				  document.getElementById("ip-address-ssh").value = "";
+            			  })
 						  .catch(error => {
 							  console.error('There was a problem with your fetch operation:', error);
 							  alert('An error occurred while exposing SSH');
@@ -343,8 +338,6 @@
 			function exposeService() {
 				var ipAddress = document.getElementById("ipaddress").value;
 				var servicePort = document.getElementById("service-port").value;
-
-				var SSH_HOST = config.SSH_HOST;
 
 				fetch('/expose-service', {
 					method: 'POST',
@@ -359,14 +352,13 @@
 							  }
 							  return response.text();
 						  })
-						  .then(port => {
-							  console.log(port);
-							  var sshCommand = `${SSH_HOST}:${port}`;
+						  .then(command => {
+            				  console.log(command);
 							  // Display pop-up with SSH information
-							  alert(`This Port For Your Service in Public: ${sshCommand}`);
+							  alert(`This Port For Your Service in Public: ${command}`);
 							  document.getElementById("ipaddress").value = "";
 							  document.getElementById("service-port").value = "";
-						  })
+            			  })
 						  .catch(error => {
 							  console.error('There was a problem with your fetch operation:', error);
 							  alert('An error occurred while exposing the service');
