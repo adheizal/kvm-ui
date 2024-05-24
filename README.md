@@ -18,6 +18,8 @@ Requirements:
 
 ### Setup
 - Clone this repo
+- Create Tables **instances** and **users** in postgres
+- 
 ```bash
 cd kvm-ui
 
