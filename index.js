@@ -41,7 +41,7 @@ const pool = new Pool({
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
-    ssl: true,
+    ssl: config.DB_SSL,
     connectionTimeoutMillis: 10000, // connection timeout in milliseconds
     idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
