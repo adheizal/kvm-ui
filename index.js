@@ -8,9 +8,13 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { Pool } = require('pg');
-// const logger = require('./logger');
-const { Logtail } = require("@logtail/node");
-const logtail = new Logtail(config.LOGTAIL_TOKEN);
+
+const logtailToken = config.LOGTAIL_TOKEN;
+let logtail;
+if (logtailToken) {
+    const { Logtail } = require("@logtail/node");
+    logtail = new Logtail(logtailToken);
+}
 
 const app = express();
 const port = 3000;
