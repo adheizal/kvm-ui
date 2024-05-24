@@ -212,11 +212,30 @@
 		</div>
 
 		<script>
+        	document.addEventListener('DOMContentLoaded', function () {
+        	    checkSession();
+        	});
+
+        	function checkSession() {
+        	    fetch('/session-status')
+        	        .then(response => response.json())
+        	        .then(data => {
+        	            if (data.loggedIn) {
+        	                document.getElementById('login-page').style.display = 'none';
+        	                document.getElementById('main-page').style.display = 'block';
+        	            } else {
+        	                document.getElementById('login-page').style.display = 'flex';
+        	                document.getElementById('main-page').style.display = 'none';
+        	            }
+        	        });
+        	}
+
 			function handleEnter(event) {
 				if (event.key === "Enter") {
 					login();
 				}
 			}
+
 			function login() {
 				var username = document.getElementById("username").value;
 				var password = document.getElementById("password").value;
@@ -231,6 +250,7 @@
 						  .then(response => {
 							  if (response.status === 200) {
 								  // If login successful, hide login page and show main page
+								  checkSession();
 								  document.getElementById("login-page").style.display = "none";
 								  document.getElementById("main-page").style.display = "flex";
 							  } else {
@@ -244,6 +264,16 @@
 							  alert('An error occurred during login');
 						  });
 			}
+
+        	function logout() {
+        	    fetch('/logout', { method: 'GET' })
+        	        .then(response => {
+        	            if (response.ok) {
+        	                document.getElementById('login-page').style.display = 'flex';
+        	                document.getElementById('main-page').style.display = 'none';
+        	            }
+        	        });
+        	}
 
 			function updateIP() {
 				var vmName = document.getElementById("vm-name").value;

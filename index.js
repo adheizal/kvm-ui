@@ -7,18 +7,28 @@ const config = require('./config.js');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const Redis = require('ioredis');
 const { Pool } = require('pg');
-// const logger = require('./logger');
 const { Logtail } = require("@logtail/node");
 const logtail = new Logtail(config.LOGTAIL_TOKEN);
 
 const app = express();
 const port = 3000;
 
+// Redis client
+const redisUri = `rediss://${config.REDIS_USER}:${config.REDIS_PASSWORD}@${config.REDIS_HOST}:${config.REDIS_PORT}`
+const redis = new Redis(redisUri);
+
+redis.on('error', (err) => {
+    console.error('Redis error:', err);
+});
+
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(session({
+    store: new RedisStore({ client: redis }),
     secret: config.SECRET,
     resave: false,
     saveUninitialized: false
@@ -47,6 +57,7 @@ app.post('/login', async (req, res) => {
         if (result.rows.length === 0) {
             res.status(401).send('Invalid username or password');
             logtail.log('Authentication failed for user: ' + username);
+            console.log('Authentication failed for user: ', username);
             return;
         }
         const user = result.rows[0];
@@ -54,16 +65,38 @@ app.post('/login', async (req, res) => {
         if (!validPassword) {
             res.status(401).send('Invalid username or password');
             logtail.log('Authentication failed for user: ' + username);
+            console.log('Authentication failed for user: ', username);
             return;
         }
         // Set user session
         req.session.userId = user.id;
         res.send('Login successful');
         logtail.log('User logged in successfully: ' + username);
+        console.log('User logged in successfully: ', username);
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send('Internal Server Error');
         logtail.error('Error during login: ' + error);
+    }
+});
+
+// Logout route
+app.get('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            logtail.error('Error during logout: ' + err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('Logout successful');
+    });
+});
+
+// Session status route
+app.get('/session-status', (req, res) => {
+    if (req.session.userId) {
+        res.json({ loggedIn: true });
+    } else {
+        res.json({ loggedIn: false });
     }
 });
 
