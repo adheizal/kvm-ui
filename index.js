@@ -279,5 +279,6 @@ app.get('/list-vms', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is listening at http://0.0.0.0:${port}`);
-    logtail.log('Server started and listening at port ' + port);
-});logtail.flush()
+    logtail?.log(`Server is listening at http://0.0.0.0:${port}`);
+    logtail?.flush();
+});
