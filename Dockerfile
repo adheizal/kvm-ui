@@ -1,5 +1,6 @@
-FROM node:22-buster-slim
+FROM node:18.22-buster-slim
 
+RUN mkdir /app
 WORKDIR /app
 COPY . .
 RUN npm install
