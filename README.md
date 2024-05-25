@@ -16,7 +16,7 @@ Requirements:
 - Database Postgres
 - Redis
 
-### Setup
+### Non-Docker
 - Clone this repo
 - Create Tables **instances** and **users** in postgres
 - 
@@ -28,4 +28,24 @@ npm install
 
 # Start Service
 node index.js
+```
+- Now you can access in browser `localhost:3000`
+
+### Docker Compose
+- Copy `.env-example` to `.env`
+```bash
+cp .env-example .env
+```
+- Update and Ajust value in `.env`
+- Make sure value `REDIS_USER` and `REDIS_PASSWORD` same in file `script/redis.conf`
+- Run Container
+```bash
+docker compose up -d
+```
+- Now you can access in browser `localhost:3000`
+
+### Create User
+- Next Run this commnad for create users
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"username": "admin", "password": "3HEQ7AJ28SDNNC"}' http://localhost:3000/register
 ```
