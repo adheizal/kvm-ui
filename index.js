@@ -7,18 +7,33 @@ const config = require('./config.js');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const Redis = require('ioredis');
 const { Pool } = require('pg');
-// const logger = require('./logger');
-const { Logtail } = require("@logtail/node");
-const logtail = new Logtail(config.LOGTAIL_TOKEN);
+
+const logtailToken = config.LOGTAIL_TOKEN;
+let logtail;
+if (logtailToken) {
+    const { Logtail } = require("@logtail/node");
+    logtail = new Logtail(logtailToken);
+}
 
 const app = express();
 const port = 3000;
+
+// Redis client
+const redisUri = `rediss://${config.REDIS_USER}:${config.REDIS_PASSWORD}@${config.REDIS_HOST}:${config.REDIS_PORT}`
+const redis = new Redis(redisUri);
+
+redis.on('error', (err) => {
+    console.error('Redis error:', err);
+});
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(session({
+    store: new RedisStore({ client: redis }),
     secret: config.SECRET,
     resave: false,
     saveUninitialized: false
@@ -31,7 +46,7 @@ const pool = new Pool({
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
-    ssl: false,
+    ssl: config.DB_SSL === 'true' ? true : false, 
     connectionTimeoutMillis: 10000, // connection timeout in milliseconds
     idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
@@ -47,6 +62,7 @@ app.post('/login', async (req, res) => {
         if (result.rows.length === 0) {
             res.status(401).send('Invalid username or password');
             logtail.log('Authentication failed for user: ' + username);
+            console.log('Authentication failed for user: ', username);
             return;
         }
         const user = result.rows[0];
@@ -54,12 +70,14 @@ app.post('/login', async (req, res) => {
         if (!validPassword) {
             res.status(401).send('Invalid username or password');
             logtail.log('Authentication failed for user: ' + username);
+            console.log('Authentication failed for user: ', username);
             return;
         }
         // Set user session
         req.session.userId = user.id;
         res.send('Login successful');
         logtail.log('User logged in successfully: ' + username);
+        console.log('User logged in successfully: ', username);
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send('Internal Server Error');
@@ -307,5 +325,6 @@ app.get('/list-vms', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is listening at http://0.0.0.0:${port}`);
-    logtail.log('Server started and listening at port ' + port);
-});logtail.flush()
+    logtail?.log(`Server is listening at http://0.0.0.0:${port}`);
+    logtail?.flush();
+});
