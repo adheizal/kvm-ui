@@ -10,8 +10,13 @@ const session = require('express-session');
 const RedisStore = require('connect-redis').default;
 const Redis = require('ioredis');
 const { Pool } = require('pg');
-const { Logtail } = require("@logtail/node");
-const logtail = new Logtail(config.LOGTAIL_TOKEN);
+
+const logtailToken = config.LOGTAIL_TOKEN;
+let logtail;
+if (logtailToken) {
+    const { Logtail } = require("@logtail/node");
+    logtail = new Logtail(logtailToken);
+}
 
 const app = express();
 const port = 3000;
@@ -308,5 +313,6 @@ app.get('/list-vms', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is listening at http://0.0.0.0:${port}`);
-    logtail.log('Server started and listening at port ' + port);
-});logtail.flush()
+    logtail?.log(`Server is listening at http://0.0.0.0:${port}`);
+    logtail?.flush();
+});
