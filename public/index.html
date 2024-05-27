@@ -30,6 +30,7 @@
 				flex-direction: column;
 				align-items: center;
 				padding: 20px;
+				margin-top: 50px;
 			}
 			h1 {
 				margin-bottom: 20px;
@@ -120,6 +121,77 @@
 			.btn-default:hover {
 				background-color: #06c;
 			}
+			.fixed-header {
+				position: fixed;
+				top: 0;
+				width: 100%;
+				background-color: #0375e6;
+				color: white;
+				text-align: center;
+				padding: 10px 0;
+				z-index: 1000;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.fixed-header h1 {
+				/*margin: 0px, 0px, 0px, 5px;*/
+				margin: 0;
+				font-size: 24px;
+			}
+
+
+			.logout-button {
+				background-color: #ff4c4c;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				font-size: 16px;
+				cursor: pointer;
+				border-radius: 4px;
+				margin-right: 20px;
+			}
+
+			.logout-button:hover {
+				background-color: #ff1c1c;
+			}
+			.select {
+				display: flex;
+				flex-direction: column;
+				/*margin: 10px 0;*/
+			}
+
+			.select label {
+				margin-bottom: 5px;
+				font-size: 16px;
+				color: #333;
+			}
+
+			.select select {
+				padding: 10px;
+				font-size: 16px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				background-color: #fff;
+				color: #333;
+				outline: none;
+				transition: border-color 0.3s ease;
+			}
+
+			.select select:focus {
+				border-color: #007bff;
+			}
+
+			.select select:hover {
+				border-color: #0056b3;
+			}
+
+			.select select option {
+				padding: 10px;
+				width: 100%;
+				height: 100%;
+			}
 		</style>
 	</head>
 	<body>
@@ -134,15 +206,16 @@
 		</div>
 
 		<div id="main-page" style="display: none;">
-			<h1>QEMU KVM Management</h1>
-			<div class="card w-full">
-				<label for="os-name">Select OS:</label>
-				<div class="select">
-					<select id="os-name">
-						<option value="ubuntu">Ubuntu</option>
-						<option value="centos">CentOS</option>
-					</select>
-				</div>
+			<div class="fixed-header">
+				<h1 style="margin-left:10px;">QEMU KVM Management</h1>
+				<button onclick="logout()" class="logout-button">Logout</button>
+			</div>
+			<label for="os-name">Select OS:</label>
+			<div class="select">
+				<select id="os-name">
+					<option value="ubuntu">Ubuntu</option>
+					<option value="centos">CentOS</option>
+				</select>
 			</div>
 			<div class="grid-container w-full">
 				<div class="card grid-item">
@@ -212,11 +285,30 @@
 		</div>
 
 		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				checkSession();
+			});
+
+			function checkSession() {
+				fetch('/session-status')
+						  .then(response => response.json())
+						  .then(data => {
+							  if (data.loggedIn) {
+								  document.getElementById('login-page').style.display = 'none';
+								  document.getElementById('main-page').style.display = 'flex';
+							  } else {
+								  document.getElementById('login-page').style.display = 'flex';
+								  document.getElementById('main-page').style.display = 'none';
+							  }
+						  });
+			}
+
 			function handleEnter(event) {
 				if (event.key === "Enter") {
 					login();
 				}
 			}
+
 			function login() {
 				var username = document.getElementById("username").value;
 				var password = document.getElementById("password").value;
@@ -231,6 +323,7 @@
 						  .then(response => {
 							  if (response.status === 200) {
 								  // If login successful, hide login page and show main page
+								  checkSession();
 								  document.getElementById("login-page").style.display = "none";
 								  document.getElementById("main-page").style.display = "flex";
 							  } else {
@@ -242,6 +335,16 @@
 						  .catch(error => {
 							  console.error('Error:', error);
 							  alert('An error occurred during login');
+						  });
+			}
+
+			function logout() {
+				fetch('/logout', {method: 'GET'})
+						  .then(response => {
+							  if (response.ok) {
+								  document.getElementById('login-page').style.display = 'flex';
+								  document.getElementById('main-page').style.display = 'none';
+							  }
 						  });
 			}
 
@@ -325,10 +428,10 @@
 							  return response.text();
 						  })
 						  .then(command => {
-            				  console.log(command);
-            				  alert(`For Access your VM: ${command}`);
-            				  document.getElementById("ip-address-ssh").value = "";
-            			  })
+							  console.log(command);
+							  alert(`For Access your VM: ${command}`);
+							  document.getElementById("ip-address-ssh").value = "";
+						  })
 						  .catch(error => {
 							  console.error('There was a problem with your fetch operation:', error);
 							  alert('An error occurred while exposing SSH');
@@ -353,12 +456,12 @@
 							  return response.text();
 						  })
 						  .then(command => {
-            				  console.log(command);
+							  console.log(command);
 							  // Display pop-up with SSH information
 							  alert(`This Port For Your Service in Public: ${command}`);
 							  document.getElementById("ipaddress").value = "";
 							  document.getElementById("service-port").value = "";
-            			  })
+						  })
 						  .catch(error => {
 							  console.error('There was a problem with your fetch operation:', error);
 							  alert('An error occurred while exposing the service');
