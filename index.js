@@ -85,23 +85,35 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Logout route
-app.get('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            logtail.error('Error during logout: ' + err);
-            return res.status(500).send('Internal Server Error');
+// Middleware to check if user is already registered
+async function checkUserExists(req, res, next) {
+    const { username } = req.body;
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (result.rows.length > 0) {
+            res.status(400).send('Username already exists');
+        } else {
+            next();
         }
-        res.send('Logout successful');
-    });
-});
+    } catch (error) {
+        console.error('Error checking user existence:', error);
+        res.status(500).send('Internal Server Error');
+    }
+}
 
-// Session status route
-app.get('/session-status', (req, res) => {
-    if (req.session.userId) {
-        res.json({ loggedIn: true });
-    } else {
-        res.json({ loggedIn: false });
+app.post('/register', checkUserExists, async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert the new user into the database
+        await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', [username, hashedPassword]);
+        
+        res.status(201).send('User created successfully');
+    } catch (error) {
+        console.error('Error during user creation:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 

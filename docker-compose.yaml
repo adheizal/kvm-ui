@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    ports:
+      - "6379"
+    volumes:
+      - ./script/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - internal
+
+  postgres:
+    image: "postgres:15"
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432"
+    volumes:
+      - ./script/create.sql:/docker-entrypoint-initdb.d/create.sql
+    networks:
+      - internal
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kvm-ui
+    environment:
+      NODE_ENV: production
+      SSH_HOST: ${SSH_HOST}
+      SSH_USER: ${SSH_USER}
+      SECRET: ${SECRET}
+      DB_USER: ${DB_USER}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+      LOGTAIL_TOKEN: ${LOGTAIL_TOKEN}
+      TEMPLATE_IP: ${TEMPLATE_IP}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_USER: ${REDIS_USER}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      DB_SSL: ${DB_SSL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - internal
+
+networks:
+  mynetwork:
+    internal: bridge
