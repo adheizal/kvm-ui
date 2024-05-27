@@ -39,6 +39,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
+console.log(config)
 // PostgreSQL connection
 const pool = new Pool({
     user: config.DB_USER,
@@ -46,7 +47,7 @@ const pool = new Pool({
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
-    ssl: false,
+    ssl: config.DB_SSL === 'true' ? true : false, 
     connectionTimeoutMillis: 10000, // connection timeout in milliseconds
     idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
