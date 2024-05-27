@@ -39,7 +39,6 @@ app.use(session({
     saveUninitialized: false
 }));
 
-console.log(config)
 // PostgreSQL connection
 const pool = new Pool({
     user: config.DB_USER,
