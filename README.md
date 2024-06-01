@@ -47,5 +47,5 @@ docker compose up -d
 ### Create User
 - Next Run this commnad for create users
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"username": "admin", "password": "3HEQ7AJ28SDNNC"}' http://localhost:3000/register
+curl -X POST -H "Content-Type: application/json" -d '{"username": "admin", "password": "randompassword"}' http://localhost:3000/register
 ```
