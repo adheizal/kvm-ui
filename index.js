@@ -47,8 +47,8 @@ const pool = new Pool({
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
     ssl: config.DB_SSL === 'true' ? true : false, 
-    connectionTimeoutMillis: 10000, // connection timeout in milliseconds
-    idleTimeoutMillis: 10000 // idle timeout in milliseconds
+    connectionTimeoutMillis: 30000, // connection timeout in milliseconds
+    idleTimeoutMillis: 30000 // idle timeout in milliseconds
 });
 
 app.use(express.static('public'));
