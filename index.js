@@ -46,7 +46,8 @@ const pool = new Pool({
     database: config.DB_NAME,
     password: config.DB_PASSWORD,
     port: config.DB_PORT,
-    ssl: config.DB_SSL === 'true' ? true : false, 
+    //ssl: config.DB_SSL === 'true' ? true : false, 
+    ssl: true,
     connectionTimeoutMillis: 10000, // connection timeout in milliseconds
     idleTimeoutMillis: 10000 // idle timeout in milliseconds
 });
@@ -84,6 +85,35 @@ app.post('/login', async (req, res) => {
         logtail.error('Error during login: ' + error);
     }
 });
+
+// Logout route
+app.get('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            logtail.error('Error during logout: ' + err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('Logout successful');
+    });
+});
+
+// Session status route
+app.get('/session-status', (req, res) => {
+    if (req.session.userId) {
+        res.json({ loggedIn: true });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
+// Middleware for authentication
+function isAuthenticated(req, res, next) {
+    if (req.session.username) {
+        return next();
+    } else {
+        res.status(401).send('Unauthorized');
+    }
+}
 
 // Middleware to check if user is already registered
 async function checkUserExists(req, res, next) {
@@ -141,6 +171,26 @@ app.post('/update-ip', async (req, res) => {
             logtail.error('Error storing instance details in the database:' + insertError);
         }
     });
+});
+
+// Delete Record VMs
+app.delete('/delete-instance', isAuthenticated, async (req, res) => {
+    const { vmName, ipAddress } = req.body;
+    try {
+        const result = await pool.query(
+            'DELETE FROM instances WHERE vm_name = $1 AND ip_address = $2',
+            [vmName, ipAddress]
+        );
+        if (result.rowCount > 0) {
+            res.status(200).send('Instance deleted successfully');
+        } else {
+            res.status(404).send('Instance not found');
+        }
+    } catch (error) {
+        console.error('Error deleting instance:', error);
+        logtail.error('Error deleting instance:', error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 app.post('/resize-disk', async (req, res) => {
