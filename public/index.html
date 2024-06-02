@@ -390,7 +390,7 @@
 	                headers: {
 	                    'Content-Type': 'application/json'
 	                },
-	                body: JSON.stringify({ vmName: vmName, ipAddress: ipAddress })
+	                body: JSON.stringify({ vmName: vmName })
 	            })
 	            .then(response => {
 	                if (!response.ok) {

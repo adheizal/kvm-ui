@@ -108,7 +108,7 @@ app.get('/session-status', (req, res) => {
 
 // Middleware for authentication
 function isAuthenticated(req, res, next) {
-    if (req.session.username) {
+    if (req.session.userId) {
         return next();
     } else {
         res.status(401).send('Unauthorized');
@@ -174,13 +174,14 @@ app.post('/update-ip', async (req, res) => {
 });
 
 // Delete Record VMs
-app.delete('/delete-instance', isAuthenticated, async (req, res) => {
-    const { vmName, ipAddress } = req.body;
+app.delete('/delete-ip', isAuthenticated, async (req, res) => {
+    const { vmName , ipAddress} = req.body;
     try {
         const result = await pool.query(
             'DELETE FROM instances WHERE vm_name = $1 AND ip_address = $2',
             [vmName, ipAddress]
         );
+        console.log(result)
         if (result.rowCount > 0) {
             res.status(200).send('Instance deleted successfully');
         } else {
