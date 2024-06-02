@@ -225,6 +225,7 @@
 					</div>
 					<div>
 						<button onclick="updateIP()">Update IP</button>
+						<button onclick="deleteIP()">Delete Data</button>
 					</div>
 				</div>
 				<div class="card grid-item">
@@ -379,6 +380,35 @@
 							  alert('IP Address Updated');  // Still show success message
 						  });
 			}
+
+	        function deleteIP() {
+	            var vmName = document.getElementById('vm-name').value;
+	            var ipAddress = document.getElementById('new-ip').value;
+				var osName = document.getElementById("os-name").value;
+	            fetch('/delete-ip', {
+	                method: 'DELETE',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify({ vmName: vmName })
+	            })
+	            .then(response => {
+	                if (!response.ok) {
+	                    throw new Error('Network response was not ok');
+	                }
+	                return response.text();
+	            })
+	            .then(data => {
+	                console.log(data);  // Log the response for debugging
+	                alert('Instance deleted successfully');
+	                document.getElementById('vm-name').value = '';
+	                document.getElementById('new-ip').value = '';
+	            })
+	            .catch(error => {
+	                console.error('There was a problem with your fetch operation:', error);
+	                alert('There was a problem with your fetch operation: ' + error.message);
+	            });
+	        }
 
 			function resizeDisk() {
 				var vmName = document.getElementById("name-vm").value;
