@@ -175,11 +175,11 @@ app.post('/update-ip', async (req, res) => {
 
 // Delete Record VMs
 app.delete('/delete-ip', isAuthenticated, async (req, res) => {
-    const { vmName , ipAddress} = req.body;
+    const { vmName } = req.body;
     try {
         const result = await pool.query(
-            'DELETE FROM instances WHERE vm_name = $1 AND ip_address = $2',
-            [vmName, ipAddress]
+            'DELETE FROM instances WHERE vm_name = $1',
+            [vmName]
         );
         console.log(result)
         if (result.rowCount > 0) {
