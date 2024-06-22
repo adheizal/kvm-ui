@@ -160,6 +160,16 @@ app.post('/update-ip', async (req, res) => {
         logtail.log('Commands executed successfully: ' + stdout);
 
         try {
+            // Check if the instance already exists in the database
+            const { rowCount } = await pool.query('SELECT 1 FROM instances WHERE vm_name = $1 AND os_name = $2 OR ip_address = $3', [vmName, osName, newIP]);
+
+            if (rowCount > 0) {
+                res.status(409).send('Data already exists');
+                console.log('Instance details already exist in the database');
+                logtail.log('Instance details already exist in the database');
+                return;
+            }
+
             // Insert the details into the database
             await pool.query('INSERT INTO instances (vm_name, ip_address, os_name) VALUES ($1, $2, $3)', [vmName, newIP, osName]);
             console.log('Instance details stored in the database');

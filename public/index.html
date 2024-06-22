@@ -361,9 +361,11 @@
 					body: JSON.stringify({vmName: vmName, osName: osName, newIP: newIP})
 				})
 						  .then(response => {
+							  if (response.status === 409) {
+								  alert('Data already exists, Please review it or Delete Data first')
+                				  throw new Error('Data already exists');
+            				  }
 							  if (!response.ok) {
-								  //                    throw new Error('Network response was not ok');
-								  // Clear input fields after successful submission
 								  document.getElementById("vm-name").value = "";
 								  document.getElementById("new-ip").value = "";
 								  return response.text();
@@ -373,11 +375,13 @@
 						  .then(data => {
 							  console.log(data);  // Log the response for debugging
 							  alert('IP Address Updated');  // Alert success message
+							  document.getElementById("vm-name").value = "";
+							  document.getElementById("new-ip").value = "";
 						  })
 						  .catch(error => {
 							  // Ignore the error since it's expected
 							  console.error('There was a problem with your fetch operation:', error);
-							  alert('IP Address Updated');  // Still show success message
+							  //alert('IP Address Updated');  // Still show success message
 						  });
 			}
 
