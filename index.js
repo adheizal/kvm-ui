@@ -18,7 +18,7 @@ if (hyperdxApiKey) {
     HyperDX = require('@hyperdx/node-opentelemetry');
     HyperDX.init({
         apiKey: hyperdxApiKey,
-        service: 'my-service'
+        service: 'kvm-ui'
     });
 }
 
