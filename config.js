@@ -8,6 +8,7 @@ const config = {
     DB_PORT: process.env.DB_PORT,
     DB_NAME: process.env.DB_NAME,
     DB_SSL: process.env.DB_SSL,
+    HYPERDX_API_KEY: process.env.HYPERDX_API_KEY,
     LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
     TEMPLATE_IP: process.env.TEMPLATE_IP,
     REDIS_HOST: process.env.REDIS_HOST,

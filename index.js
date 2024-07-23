@@ -11,6 +11,17 @@ const RedisStore = require('connect-redis').default;
 const Redis = require('ioredis');
 const { Pool } = require('pg');
 
+const hyperdxApiKey = config.HYPERDX_API_KEY;
+
+let HyperDX;
+if (hyperdxApiKey) {
+    HyperDX = require('@hyperdx/node-opentelemetry');
+    HyperDX.init({
+        apiKey: hyperdxApiKey,
+        service: 'my-service'
+    });
+}
+
 const logtailToken = config.LOGTAIL_TOKEN;
 let logtail;
 if (logtailToken) {
@@ -383,6 +394,10 @@ app.get('/list-vms', async (req, res) => {
         res.status(500).send('An error occurred while fetching list of VMs');
     }
 });
+
+if (HyperDX) {
+    HyperDX.setupExpressErrorHandler(app);
+}
 
 app.listen(port, () => {
     console.log(`Server is listening at http://0.0.0.0:${port}`);
