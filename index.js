@@ -386,7 +386,6 @@ app.post('/check-ip', async (req, res) => {
 app.get('/list-vms', async (req, res) => {
     try {
         const result = await pool.query('SELECT vm_name, ip_address, ssh_port, service_ports FROM public.instances');
-        logtail.log(result.rows);
         res.json(result.rows);
     } catch (error) {
         logtail.error('Error fetching list of VMs:', error);
