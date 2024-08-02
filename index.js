@@ -126,23 +126,30 @@ function isAuthenticated(req, res, next) {
     }
 }
 
-// Middleware to check if user is already registered
-async function checkUserExists(req, res, next) {
+// Middleware to check if the user limit is reached or if the username already exists
+async function checkUserLimitAndExists(req, res, next) {
     const { username } = req.body;
     try {
-        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-        if (result.rows.length > 0) {
-            res.status(400).send('Username already exists');
-        } else {
-            next();
+        const userCountResult = await pool.query('SELECT COUNT(*) FROM users');
+        const userCount = parseInt(userCountResult.rows[0].count, 10);
+
+        if (userCount > 0) {
+            return res.status(403).send('User registration is closed');
         }
+
+        const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (userResult.rows.length > 0) {
+            return res.status(400).send('Username already exists');
+        }
+
+        next();
     } catch (error) {
         console.error('Error checking user existence:', error);
         res.status(500).send('Internal Server Error');
     }
 }
 
-app.post('/register', checkUserExists, async (req, res) => {
+app.post('/register', checkUserLimitAndExists, async (req, res) => {
     const { username, password } = req.body;
     try {
         // Hash the password
