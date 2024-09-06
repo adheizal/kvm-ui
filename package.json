@@ -11,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "@hyperdx/node-opentelemetry": "^0.8.0",
-    "@logtail/node": "^0.4.21",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "connect-redis": "^7.1.1",
