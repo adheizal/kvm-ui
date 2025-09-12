@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const RedisStore = require('connect-redis').default;
+const { URL } = require('url');
 const Redis = require('ioredis');
 const { Pool } = require('pg');
 
@@ -26,12 +27,48 @@ const app = express();
 const port = 3000;
 
 // Redis client
-const redisUri = `rediss://${config.REDIS_USER}:${config.REDIS_PASSWORD}@${config.REDIS_HOST}:${config.REDIS_PORT}`
-const redis = new Redis(redisUri);
+//const redisUri = `rediss://${config.REDIS_USER}:${config.REDIS_PASSWORD}@${config.REDIS_HOST}:${config.REDIS_PORT}`
+//const redis = new Redis(redisUri);
 
-redis.on('error', (err) => {
-    console.error('Redis error:', err);
-});
+//redis.on('error', (err) => {
+//    console.error('Redis error:', err);
+//});
+const redisUrl = new URL(`${
+    (process.env.REDIS_TLS === 'true' ? 'rediss' : 'redis')
+  }://${config.REDIS_USER ? `${encodeURIComponent(config.REDIS_USER)}:` : ''}${
+    encodeURIComponent(config.REDIS_PASSWORD)
+  }@${config.REDIS_HOST}:${config.REDIS_PORT}`);
+  
+  const useTls = redisUrl.protocol === 'rediss:';
+  
+  // Optional: load CA / tweak TLS if your provider needs it
+  // e.g. REDIS_CA (PEM string) or REDIS_REJECT_UNAUTHORIZED=false for testing
+  let tlsOptions = undefined;
+  if (useTls) {
+    tlsOptions = {
+      // If your provider needs SNI, set servername to host:
+      servername: config.REDIS_HOST,
+      // Provide a CA if required:
+      ca: process.env.REDIS_CA ? [process.env.REDIS_CA] : undefined,
+      // For quick troubleshooting only (don’t keep this in prod!):
+      rejectUnauthorized: process.env.REDIS_REJECT_UNAUTHORIZED === 'false' ? false : true,
+    };
+  }
+  
+  // Force IPv4 to avoid IPv6 timeouts (common!)
+  const redis = new Redis(redisUrl.toString(), {
+    family: 4,
+    tls: tlsOptions,
+    // Helpful timeouts & retries
+    connectTimeout: 10000,
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+  });
+  
+  redis.on('connect', () => console.log('Redis: connecting...'));
+  redis.on('ready',   () => console.log('Redis: ready'));
+  redis.on('error',   (err) => console.error('Redis error:', err));
+  redis.on('close',   () => console.warn('Redis: connection closed'));
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
