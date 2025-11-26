@@ -3,3 +3,4 @@
 .env
 index-copy.js
 logger.js
+docker-compose.yaml

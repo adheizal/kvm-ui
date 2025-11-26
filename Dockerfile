@@ -1,4 +1,4 @@
-FROM node:18.22-buster-slim
+FROM node:20.19.6-slim
 
 RUN mkdir /app
 WORKDIR /app

@@ -57,5 +57,5 @@ services:
       - internal
 
 networks:
-  mynetwork:
-    internal: bridge
+  internal:
+    driver: bridge
