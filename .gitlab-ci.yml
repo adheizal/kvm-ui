@@ -12,6 +12,6 @@ deploy_prod:
   environment:
     name: prod
   script:
-    - ssh root@$HOST_TARGETS "bash ~/script/run.sh"
+    - ssh root@$HOST_TARGETS "bash /opt/script/run.sh"
   only:
     - main
