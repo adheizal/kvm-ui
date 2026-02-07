@@ -5,7 +5,6 @@ import path from 'path';
 import { config } from './config/env';
 import routes from './routes';
 import { errorHandler, notFound } from './middlewares/error.middleware';
-import { rateLimiter } from './middlewares/rate-limit.middleware';
 import { performanceMetrics } from './middlewares/performance.middleware';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
@@ -13,8 +12,7 @@ import { swaggerSpec } from './config/swagger';
 export function createApp(): Application {
   const app = express();
 
-  // Trust proxy - Required for Cloudflare Tunnel and reverse proxies
-  // This allows express-rate-limit to correctly identify users behind proxy
+  // Trust proxy - Required for Cloudflare Tunnel to get correct client IP
   app.set('trust proxy', true);
 
   // Security middleware - DISABLED in development to avoid HSTS issues
@@ -72,8 +70,9 @@ export function createApp(): Application {
   // Performance metrics (must be before routes)
   app.use(performanceMetrics);
 
-  // Rate limiting
-  app.use(rateLimiter);
+  // Rate limiting - DISABLED when using Cloudflare Tunnel to avoid trust proxy issues
+  // Cloudflare already provides DDoS protection at the edge
+  // app.use(rateLimiter);
 
   // Body parsing middleware
   app.use(express.json());
