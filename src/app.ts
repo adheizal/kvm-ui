@@ -13,6 +13,10 @@ import { swaggerSpec } from './config/swagger';
 export function createApp(): Application {
   const app = express();
 
+  // Trust proxy - Required for Cloudflare Tunnel and reverse proxies
+  // This allows express-rate-limit to correctly identify users behind proxy
+  app.set('trust proxy', true);
+
   // Security middleware - DISABLED in development to avoid HSTS issues
   if (config.env === 'production') {
     // Production: Configure CSP to allow same-origin and configured APP_URL

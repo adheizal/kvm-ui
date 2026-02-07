@@ -1,7 +1,17 @@
 import axios from 'axios';
 
+// Use VITE_API_URL if set, otherwise use empty string for relative paths (same-origin)
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  // If explicitly set to empty string or undefined, use relative path
+  if (envUrl === '' || envUrl === undefined) {
+    return '';
+  }
+  return envUrl;
+};
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

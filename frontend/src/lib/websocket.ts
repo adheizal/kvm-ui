@@ -1,7 +1,16 @@
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const getSocketURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  // If explicitly set to empty string or undefined, use relative path
+  if (envUrl === '' || envUrl === undefined) {
+    return '';
+  }
+  return envUrl;
+};
+
+const SOCKET_URL = getSocketURL();
 
 class WebSocketClient {
   private socket: Socket | null = null;
