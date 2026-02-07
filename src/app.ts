@@ -15,8 +15,37 @@ export function createApp(): Application {
 
   // Security middleware - DISABLED in development to avoid HSTS issues
   if (config.env === 'production') {
-    // Only enable strict security in production
-    app.use(helmet());
+    // Production: Configure CSP to allow same-origin and configured APP_URL
+    const appUrl = config.app.url || '*';
+    const cspDirectives = {
+      'default-src': ["'self'"],
+      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'img-src': ["'self'", 'data:', 'https:'],
+      'connect-src': ["'self'", appUrl, 'ws:', 'wss:'],
+      'font-src': ["'self'"],
+      'object-src': ["'none'"],
+      'media-src': ["'self'"],
+      'frame-src': ["'none'"],
+    };
+
+    // If using localhost, allow all localhost connections
+    if (appUrl.includes('localhost') || appUrl.includes('127.0.0.1')) {
+      cspDirectives['connect-src'].push(
+        'http://localhost:*',
+        'http://127.0.0.1:*',
+        'ws://localhost:*',
+        'ws://127.0.0.1:*'
+      );
+    }
+
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: cspDirectives,
+        },
+      })
+    );
   } else {
     // Development: Relax security headers
     app.use(
