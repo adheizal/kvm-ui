@@ -11,7 +11,7 @@ COPY tsconfig.json ./
 RUN npm ci
 
 # Copy frontend package files and install frontend dependencies
-COPY frontend/package*.json ./frontend/
+COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci
 
 # Copy source code
