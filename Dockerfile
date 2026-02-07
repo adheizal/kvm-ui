@@ -34,8 +34,10 @@ RUN apt-get update && apt-get install -y dumb-init openssh-client && rm -rf /var
 COPY package*.json ./
 COPY . .
 
-# Install production dependencies only (skip prepare script to avoid husky)
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+# Install production dependencies and rebuild native modules
+RUN npm ci --omit=dev --ignore-scripts && \
+    npm cache clean --force && \
+    npm rebuild bcrypt
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
