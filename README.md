@@ -85,19 +85,41 @@ open http://localhost:3000
    # Edit .env with your configuration
    ```
 
-3. **Start the services**
+3. **Build Docker image and get SSH public key**
+
+   ```bash
+   docker compose build app
+
+   # The build will display an SSH public key
+   # Copy this key for the next step
+   ```
+
+4. **Add SSH public key to KVM host**
+
+   ```bash
+   # On your KVM host:
+   mkdir -p ~/.ssh
+   echo "ssh-ed25519 <YOUR_PUBLIC_KEY_FROM_BUILD> kvm-ui@buildkitsandbox" >> ~/.ssh/authorized_keys
+   chmod 700 ~/.ssh
+   chmod 600 ~/.ssh/authorized_keys
+
+   # Or use the helper script to retrieve the key:
+   ./scripts/show-ssh-key.sh
+   ```
+
+5. **Start the services**
 
    ```bash
    docker compose up -d
    ```
 
-4. **Run database migrations**
+6. **Run database migrations**
 
    ```bash
    docker compose exec app npm run migrate
    ```
 
-5. **Create admin user**
+7. **Create admin user**
    ```bash
    curl -X POST http://localhost:3000/api/auth/register \
      -H "Content-Type: application/json" \

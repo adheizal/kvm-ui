@@ -49,6 +49,7 @@ services:
       PORT: 3000
       SSH_HOST: ${SSH_HOST}
       SSH_USER: ${SSH_USER}
+      SSH_KEY_PATH: /app/.ssh/id_ed25519
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       DB_HOST: postgres

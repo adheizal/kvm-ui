@@ -8,10 +8,16 @@ const execAsync = promisify(exec);
 
 export class SSHService {
   private buildSSHCommand(scriptName: string, ...args: string[]): string {
-    const scriptPath = `ssh -l ${config.ssh.user} ${config.ssh.host} bash /opt/script/${scriptName}`;
+    const sshKeyPath = config.ssh.keyPath || '/app/.ssh/id_ed25519';
+    const scriptPath = `ssh -i ${sshKeyPath} -l ${config.ssh.user} ${config.ssh.host} bash /opt/script/${scriptName}`;
     // Filter out empty/undefined arguments to avoid double spaces
     const validArgs = args.filter((arg) => arg && arg.trim().length > 0);
     return validArgs.length > 0 ? `${scriptPath} ${validArgs.join(' ')}` : scriptPath;
+  }
+
+  private buildSSHCommandRaw(command: string): string {
+    const sshKeyPath = config.ssh.keyPath || '/app/.ssh/id_ed25519';
+    return `ssh -i ${sshKeyPath} -l ${config.ssh.user} ${config.ssh.host} "${command}"`;
   }
 
   async executeScript(scriptName: string, ...args: string[]): Promise<SSHResult> {
@@ -102,7 +108,8 @@ export class SSHService {
   }
 
   async checkIP(ipAddress: string): Promise<SSHResult & { status?: 'up' | 'down' | 'unknown' }> {
-    const command = `ssh -l ${config.ssh.user} ${config.ssh.host} nmap -sP -PR ${ipAddress}`;
+    const sshKeyPath = config.ssh.keyPath || '/app/.ssh/id_ed25519';
+    const command = `ssh -i ${sshKeyPath} -l ${config.ssh.user} ${config.ssh.host} nmap -sP -PR ${ipAddress}`;
     logger.info(`Checking IP: ${command}`);
 
     try {
@@ -125,14 +132,14 @@ export class SSHService {
   }
 
   async getAllVMStatuses(): Promise<SSHResult & { vmStatuses?: Map<string, string> }> {
-    const command = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh list --all --name"`;
+    const command = this.buildSSHCommandRaw('virsh list --all --name');
     logger.info(`Getting all VM statuses: ${command}`);
 
     try {
       const { stdout, stderr } = await execAsync(command, { cwd: '/tmp', timeout: 30000 });
 
       // Get running VMs
-      const runningCommand = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh list --name"`;
+      const runningCommand = this.buildSSHCommandRaw('virsh list --name');
       const { stdout: runningStdout } = await execAsync(runningCommand, {
         cwd: '/tmp',
         timeout: 30000,
@@ -176,14 +183,14 @@ export class SSHService {
   async getAllVMsFromVirsh(): Promise<
     SSHResult & { vms?: Array<{ name: string; status: string }> }
   > {
-    const command = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh list --all --name"`;
+    const command = this.buildSSHCommandRaw('virsh list --all --name');
     logger.info(`Getting all VMs from virsh: ${command}`);
 
     try {
       const { stdout, stderr } = await execAsync(command, { cwd: '/tmp', timeout: 30000 });
 
       // Get running VMs
-      const runningCommand = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh list --name"`;
+      const runningCommand = this.buildSSHCommandRaw('virsh list --name');
       const { stdout: runningStdout } = await execAsync(runningCommand, {
         cwd: '/tmp',
         timeout: 30000,
@@ -224,7 +231,7 @@ export class SSHService {
   }
 
   async startVM(vmName: string): Promise<SSHResult> {
-    const command = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh start ${vmName}"`;
+    const command = this.buildSSHCommandRaw(`virsh start ${vmName}`);
     logger.info(`Starting VM: ${command}`);
 
     try {
@@ -257,7 +264,7 @@ export class SSHService {
   }
 
   async stopVM(vmName: string): Promise<SSHResult> {
-    const command = `ssh -l ${config.ssh.user} ${config.ssh.host} "virsh shutdown ${vmName}"`;
+    const command = this.buildSSHCommandRaw(`virsh shutdown ${vmName}`);
     logger.info(`Stopping VM: ${command}`);
 
     try {

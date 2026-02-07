@@ -10,6 +10,7 @@ const envSchema = Joi.object({
   // SSH Configuration
   SSH_HOST: Joi.string().required(),
   SSH_USER: Joi.string().required(),
+  SSH_KEY_PATH: Joi.string().allow('').default('/app/.ssh/id_ed25519'),
 
   // JWT Configuration
   JWT_SECRET: Joi.string().required().default('change-this-secret-in-production'),
@@ -57,6 +58,7 @@ export const config = {
   ssh: {
     host: envVars.SSH_HOST,
     user: envVars.SSH_USER,
+    keyPath: envVars.SSH_KEY_PATH || '/app/.ssh/id_ed25519',
   },
   jwt: {
     secret: envVars.JWT_SECRET,

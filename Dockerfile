@@ -24,8 +24,8 @@ FROM node:20.19.6-slim AS production
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/*
+# Install dumb-init and OpenSSH for proper signal handling and SSH
+RUN apt-get update && apt-get install -y dumb-init openssh-client && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -40,8 +40,25 @@ COPY --from=builder /app/frontend/dist ./frontend/dist
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/script ./script
 
-# Create logs directory
-RUN mkdir -p logs
+# Create logs and .ssh directories
+RUN mkdir -p logs /app/.ssh
+
+# Generate SSH key pair for KVM host connections
+RUN ssh-keygen -t ed25519 -f /app/.ssh/id_ed25519 -N "" -C "kvm-ui@$(hostname)" && \
+    chmod 700 /app/.ssh && \
+    chmod 600 /app/.ssh/id_ed25519 && \
+    chmod 644 /app/.ssh/id_ed25519.pub && \
+    echo "========================================" && \
+    echo "SSH KEY GENERATED FOR KVM HOST ACCESS" && \
+    echo "========================================" && \
+    echo "" && \
+    echo "Public Key (add this to your KVM host's ~/.ssh/authorized_keys):" && \
+    echo "" && \
+    cat /app/.ssh/id_ed25519.pub && \
+    echo "" && \
+    echo "========================================" && \
+    echo "Private key stored at: /app/.ssh/id_ed25519" && \
+    echo "========================================"
 
 # Set permissions
 RUN chmod +x /app/script/*.sh
