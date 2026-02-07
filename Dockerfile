@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/
 
 # Copy package files
 COPY package*.json ./
+COPY . .
 
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
