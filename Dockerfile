@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20.19.6-slim AS builder
 
+# Build arguments for API URL (use empty string to use relative paths)
+ARG VITE_API_URL=""
+
 WORKDIR /app
 
 # Copy package files
@@ -19,7 +22,9 @@ COPY src ./src
 COPY migrations ./migrations
 COPY script ./script
 
-# Build backend and frontend
+# Build backend and frontend with API URL
+# If VITE_API_URL is set, use it; otherwise use relative paths for same-origin
+ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build:all
 
 # Production stage

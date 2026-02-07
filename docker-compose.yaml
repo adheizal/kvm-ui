@@ -42,6 +42,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Leave empty to use relative paths for API calls (same-origin)
+        # This allows the app to work with Cloudflare Tunnel, custom domains, etc.
+        VITE_API_URL: ""
     container_name: kvm-ui
     restart: unless-stopped
     environment:
