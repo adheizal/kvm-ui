@@ -7,8 +7,12 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install all dependencies (including devDependencies for build)
+# Install backend dependencies
 RUN npm ci
+
+# Copy frontend package files and install frontend dependencies
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm ci
 
 # Copy source code
 COPY src ./src
