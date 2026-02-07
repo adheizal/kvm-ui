@@ -12,7 +12,9 @@ RUN npm ci
 
 # Copy source code
 COPY src ./src
+COPY frontend ./frontend
 COPY migrations ./migrations
+COPY script ./script
 
 # Build backend and frontend
 RUN npm run build:all
@@ -29,8 +31,8 @@ RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/
 COPY package*.json ./
 COPY . .
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Install production dependencies only (skip prepare script to avoid husky)
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
