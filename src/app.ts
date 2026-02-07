@@ -29,15 +29,14 @@ export function createApp(): Application {
       'frame-src': ["'none'"],
     };
 
-    // If using localhost, allow all localhost connections
-    if (appUrl.includes('localhost') || appUrl.includes('127.0.0.1')) {
-      cspDirectives['connect-src'].push(
-        'http://localhost:*',
-        'http://127.0.0.1:*',
-        'ws://localhost:*',
-        'ws://127.0.0.1:*'
-      );
-    }
+    // Always allow localhost connections for development/admin access
+    // This is needed when accessing via Cloudflare Tunnel but API runs on localhost
+    cspDirectives['connect-src'].push(
+      'http://localhost:*',
+      'http://127.0.0.1:*',
+      'ws://localhost:*',
+      'ws://127.0.0.1:*'
+    );
 
     app.use(
       helmet({
