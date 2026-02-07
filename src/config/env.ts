@@ -40,7 +40,9 @@ const envSchema = Joi.object({
   // VM Configuration
   TEMPLATE_IP: Joi.string().allow('').default(''),
 
-  // CORS
+  // CORS & App Configuration
+  APP_URL: Joi.string().allow('').default(''),
+  APP_NAME: Joi.string().default('KVM-UI'),
   CORS_ORIGIN: Joi.string().default('*'),
   RATE_LIMIT_WINDOW_MS: Joi.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
@@ -55,6 +57,10 @@ if (error) {
 export const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
+  app: {
+    url: envVars.APP_URL,
+    name: envVars.APP_NAME,
+  },
   ssh: {
     host: envVars.SSH_HOST,
     user: envVars.SSH_USER,
