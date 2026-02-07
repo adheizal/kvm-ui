@@ -1,6 +1,58 @@
-/node_modules
-.ssh
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+build/
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSH
+.ssh/
+
+# Backup files
+*.old
+*.bak
 index-copy.js
 logger.js
-docker-compose.yaml
+
+# Temporary files
+tmp/
+temp/
+
+REFACTORING_COMPLETE.md
+TROUBLESHOOTING.md
+MIGRATION_GUIDE.md
+PLAN.md
+QUICKSTART.md
+FRONTEND_PLAN.md
+HSTS_FIX.md
+DEVELOPMENT.md
+AGENTS.md
+BACKWARD_COMPATIBILITY.md

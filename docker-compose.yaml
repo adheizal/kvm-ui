@@ -2,59 +2,93 @@ version: '3.8'
 
 services:
   redis:
-    image: "redis:latest"
-    container_name: redis
+    image: "redis:7-alpine"
+    container_name: kvm-redis
+    restart: unless-stopped
     ports:
-      - "6379"
+      - "6379:6379"
     volumes:
       - ./script/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     networks:
       - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   postgres:
-    image: "postgres:15"
-    container_name: postgres
+    image: "postgres:15-alpine"
+    container_name: kvm-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER:-internal_users}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-internal_db}
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
-      - ./script/create.sql:/docker-entrypoint-initdb.d/create.sql
+      - postgres-data:/var/lib/postgresql/data
+      - ./script/create.sql:/docker-entrypoint-initdb.d/01-create.sql
     networks:
       - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-internal_users}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: kvm-ui
+    restart: unless-stopped
     environment:
       NODE_ENV: production
+      PORT: 3000
       SSH_HOST: ${SSH_HOST}
       SSH_USER: ${SSH_USER}
-      SECRET: ${SECRET}
-      DB_USER: ${DB_USER}
-      DB_HOST: ${DB_HOST}
-      DB_NAME: ${DB_NAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_PORT: ${DB_PORT}
-      LOGTAIL_TOKEN: ${LOGTAIL_TOKEN}
-      TEMPLATE_IP: ${TEMPLATE_IP}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_USER: ${REDIS_USER}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      DB_SSL: ${DB_SSL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-internal_db}
+      DB_USER: ${DB_USER:-internal_users}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      DB_SSL: ${DB_SSL:-false}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USER: ${REDIS_USER:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_TLS: ${REDIS_TLS:-false}
+      HYPERDX_API_KEY: ${HYPERDX_API_KEY:-}
+      TEMPLATE_IP: ${TEMPLATE_IP:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
     ports:
       - "3000:3000"
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - internal
+    volumes:
+      - app-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres-data:
+  redis-data:
+  app-logs:
 
 networks:
   internal:
